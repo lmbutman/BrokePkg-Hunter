@@ -1,0 +1,2 @@
+modinfo: ERROR: Module brokepkg not found.
+modinfo failed (likely missing .ko)

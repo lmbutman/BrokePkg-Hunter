@@ -1,0 +1,18 @@
+---- /sys/module/brokepkg/coresize ----
+155648
+---- /sys/module/brokepkg/holders ----
+---- /sys/module/brokepkg/initsize ----
+0
+---- /sys/module/brokepkg/initstate ----
+live
+---- /sys/module/brokepkg/notes ----
+---- /sys/module/brokepkg/refcnt ----
+0
+---- /sys/module/brokepkg/sections ----
+---- /sys/module/brokepkg/srcversion ----
+9388DA95287C36F95CEC1CD
+---- /sys/module/brokepkg/taint ----
+OE
+---- /sys/module/brokepkg/uevent ----
+---- /sys/module/brokepkg/version ----
+0.8

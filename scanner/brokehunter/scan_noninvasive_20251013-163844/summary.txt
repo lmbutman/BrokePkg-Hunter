@@ -1,0 +1,3 @@
+verdict: installed_in_memory
+evidence: ; matching symbols found in /proc/kallsyms
+see: scan_noninvasive_20251013-163844 for raw outputs

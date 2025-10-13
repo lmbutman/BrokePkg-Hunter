@@ -1,0 +1,209 @@
+Scanning /proc/kallsyms for likely brokepkg symbols...
+ffffffffb9ae1eb0 T cpufreq_remove_update_util_hook
+ffffffffb9ae1ed0 T cpufreq_add_update_util_hook
+ffffffffb9c65220 T post_alloc_hook
+ffffffffb9c8bc70 t slab_pre_alloc_hook.constprop.0
+ffffffffb9c8bd40 t slab_free_freelist_hook
+ffffffffb9c8c410 t memcg_slab_post_alloc_hook
+ffffffffb9ee0a50 t gpiochip_set_irq_hooks
+ffffffffb9eff080 t broken_parity_status_store
+ffffffffb9eff950 t broken_parity_status_show
+ffffffffb9f0e170 t quirk_broken_intx_masking
+ffffffffb9f112c0 t mellanox_check_broken_intx_masking
+ffffffffba015d60 T set_irq_remapping_broken
+ffffffffba15f780 t hooks_validate
+ffffffffba15f7d0 t nf_hook_entry_head
+ffffffffba15f8c0 t __nf_hook_entries_try_shrink
+ffffffffba15fa00 t __nf_hook_entries_free
+ffffffffba15fa10 T nf_hook_slow
+ffffffffba15fac0 T nf_hook_slow_list
+ffffffffba15fdd0 t __nf_unregister_net_hook
+ffffffffba15ff60 T nf_unregister_net_hook
+ffffffffba15ffd0 t nf_hook_entries_grow
+ffffffffba160190 T nf_unregister_net_hooks
+ffffffffba160210 T nf_hook_entries_insert_raw
+ffffffffba160290 T nf_hook_entries_delete_raw
+ffffffffba160310 t __nf_register_net_hook
+ffffffffba160480 T nf_register_net_hook
+ffffffffba160510 T nf_register_net_hooks
+ffffffffba1613a0 T nf_queue_nf_hook_drop
+ffffffffba1d0480 t NF_HOOK.constprop.0.isra.0
+ffffffffba242d90 t NF_HOOK.constprop.0.isra.0
+ffffffffba254390 t __register_prot_hook.part.0
+ffffffffba2566c0 t __unregister_prot_hook
+ffffffffba28fe41 t gpiochip_set_irq_hooks.cold
+ffffffffba294dac t mellanox_check_broken_intx_masking.cold
+ffffffffba8b93e0 d mellanox_broken_intx_devs
+ffffffffba8bad80 d brokendb
+ffffffffbab89500 d capability_hooks
+ffffffffbab89800 D security_hook_heads
+ffffffffbab89f20 d selinux_hooks
+ffffffffbab8be60 d tomoyo_hooks
+ffffffffbab8c300 d apparmor_hooks
+ffffffffbab8cdc0 d yama_hooks
+ffffffffbab8ce60 d lockdown_hooks
+ffffffffbab8cec0 d bpf_lsm_hooks
+ffffffffbabab7b4 r __ksymtab_console_blank_hook
+ffffffffbabb10a0 r __ksymtab_nf_hook_slow
+ffffffffbabb10ac r __ksymtab_nf_hook_slow_list
+ffffffffbabb10b8 r __ksymtab_nf_hooks_needed
+ffffffffbabb113c r __ksymtab_nf_register_net_hook
+ffffffffbabb1148 r __ksymtab_nf_register_net_hooks
+ffffffffbabb1184 r __ksymtab_nf_unregister_net_hook
+ffffffffbabb1190 r __ksymtab_nf_unregister_net_hooks
+ffffffffbabb8dbc r __ksymtab_br_fdb_test_addr_hook
+ffffffffbabb98d8 r __ksymtab_cpufreq_add_update_util_hook
+ffffffffbabb9a4c r __ksymtab_cpufreq_remove_update_util_hook
+ffffffffbabbf7b8 r __ksymtab_nf_ct_hook
+ffffffffbabbf7d0 r __ksymtab_nf_hook_entries_delete_raw
+ffffffffbabbf7dc r __ksymtab_nf_hook_entries_insert_raw
+ffffffffbabbf848 r __ksymtab_nf_nat_hook
+ffffffffbabbf878 r __ksymtab_nf_queue_nf_hook_drop
+ffffffffbabbf89c r __ksymtab_nfnl_ct_hook
+ffffffffbabd1bf9 r __kstrtab_cpufreq_add_update_util_hook
+ffffffffbabd1c16 r __kstrtab_cpufreq_remove_update_util_hook
+ffffffffbabd553c r __kstrtabns_br_fdb_test_addr_hook
+ffffffffbabd553c r __kstrtabns_console_blank_hook
+ffffffffbabd553c r __kstrtabns_cpufreq_add_update_util_hook
+ffffffffbabd553c r __kstrtabns_cpufreq_remove_update_util_hook
+ffffffffbabd553c r __kstrtabns_nf_ct_hook
+ffffffffbabd553c r __kstrtabns_nf_hook_entries_delete_raw
+ffffffffbabd553c r __kstrtabns_nf_hook_entries_insert_raw
+ffffffffbabd553c r __kstrtabns_nf_hook_slow
+ffffffffbabd553c r __kstrtabns_nf_hook_slow_list
+ffffffffbabd553c r __kstrtabns_nf_hooks_needed
+ffffffffbabd553c r __kstrtabns_nf_nat_hook
+ffffffffbabd553c r __kstrtabns_nf_queue_nf_hook_drop
+ffffffffbabd553c r __kstrtabns_nf_register_net_hook
+ffffffffbabd553c r __kstrtabns_nf_register_net_hooks
+ffffffffbabd553c r __kstrtabns_nf_unregister_net_hook
+ffffffffbabd553c r __kstrtabns_nf_unregister_net_hooks
+ffffffffbabd553c r __kstrtabns_nfnl_ct_hook
+ffffffffbabea1be r __kstrtab_console_blank_hook
+ffffffffbabf4930 r __kstrtab_br_fdb_test_addr_hook
+ffffffffbabf8632 r __kstrtab_nf_hooks_needed
+ffffffffbabf8642 r __kstrtab_nf_hook_entries_insert_raw
+ffffffffbabf865d r __kstrtab_nf_unregister_net_hook
+ffffffffbabf8674 r __kstrtab_nf_hook_entries_delete_raw
+ffffffffbabf868f r __kstrtab_nf_register_net_hook
+ffffffffbabf86a4 r __kstrtab_nf_register_net_hooks
+ffffffffbabf86ba r __kstrtab_nf_unregister_net_hooks
+ffffffffbabf86d2 r __kstrtab_nf_hook_slow
+ffffffffbabf86df r __kstrtab_nf_hook_slow_list
+ffffffffbabf86f1 r __kstrtab_nfnl_ct_hook
+ffffffffbabf86fe r __kstrtab_nf_ct_hook
+ffffffffbabf8716 r __kstrtab_nf_nat_hook
+ffffffffbabf88c1 r __kstrtab_nf_queue_nf_hook_drop
+ffffffffbaf5ec64 r btf_sleepable_lsm_hooks
+ffffffffbaf5ec64 r __BTF_ID__set__btf_sleepable_lsm_hooks
+ffffffffbaf5ec98 r bpf_lsm_hooks
+ffffffffbaf5ec98 r __BTF_ID__set__bpf_lsm_hooks
+ffffffffbb1ac900 d dev_attr_broken_parity_status
+ffffffffbb22e800 d nf_hook_mutex
+ffffffffbb278168 D br_fdb_test_addr_hook
+ffffffffbb279778 D nf_nat_hook
+ffffffffbb279788 D nf_ct_hook
+ffffffffbb279790 D nfnl_ct_hook
+ffffffffbb66a7e6 T security_add_hooks
+ffffffffbb68e75c t fix_broken_hp_bios_irq9
+ffffffffbb9e9ca8 B console_blank_hook
+ffffffffbb9f287c B irq_remap_broken
+ffffffffbb9faa30 b dlci_ioctl_hook
+ffffffffbb9faa38 b vlan_ioctl_hook
+ffffffffbb9faa40 b br_ioctl_hook
+ffffffffbb9fb9a0 B nf_hooks_needed
+ffffffffbba0356c b broken_hp_bios_irq9
+ffffffffc0c8d024 r _note_7	[brokepkg]
+ffffffffc0c8b000 t get_order	[brokepkg]
+ffffffffc0c8b020 t hook_tcp6_seq_show	[brokepkg]
+ffffffffc0c8fa88 b orig_tcp6_seq_show	[brokepkg]
+ffffffffc0c8b060 t hook_tcp4_seq_show	[brokepkg]
+ffffffffc0c8fa90 b orig_tcp4_seq_show	[brokepkg]
+ffffffffc0c8fa98 b orig_kill	[brokepkg]
+ffffffffc0c8fa80 b orig_ip_rcv	[brokepkg]
+ffffffffc0c8faa0 b orig_getdents64	[brokepkg]
+ffffffffc0c8faa8 b orig_getdents	[brokepkg]
+ffffffffc0c8f000 d hooks	[brokepkg]
+ffffffffc0c8beaa t rootkit_exit	[brokepkg]
+ffffffffc0c8d150 r .LC0	[brokepkg]
+ffffffffc0c8f4e0 d kp	[brokepkg]
+ffffffffc0c8f650 d __UNIQUE_ID_ddebug564.7	[brokepkg]
+ffffffffc0c8f618 d __UNIQUE_ID_ddebug566.6	[brokepkg]
+ffffffffc0c8f5e0 d __UNIQUE_ID_ddebug567.5	[brokepkg]
+ffffffffc0c8f5a8 d __UNIQUE_ID_ddebug568.4	[brokepkg]
+ffffffffc0c8f570 d __UNIQUE_ID_ddebug569.3	[brokepkg]
+ffffffffc0c8d050 r __func__.0	[brokepkg]
+ffffffffc0c8d060 r __func__.1	[brokepkg]
+ffffffffc0c8d070 r __func__.2	[brokepkg]
+ffffffffc0c8b780 t get_order	[brokepkg]
+ffffffffc0c8fab8 b prev_module	[brokepkg]
+ffffffffc0c8bec8 t module_show.cold	[brokepkg]
+ffffffffc0c8fab0 b isHidden	[brokepkg]
+ffffffffc0c8befc t module_hide.cold	[brokepkg]
+ffffffffc0c8bf42 t switch_module_hide.cold	[brokepkg]
+ffffffffc0c8bfbe t pid_hide.cold	[brokepkg]
+ffffffffc0c8bfd3 t pid_show.cold	[brokepkg]
+ffffffffc0c8bfec t switch_pid_hide.cold	[brokepkg]
+ffffffffc0c8c01a t port_hide.cold	[brokepkg]
+ffffffffc0c8c031 t port_show.cold	[brokepkg]
+ffffffffc0c8c04a t switch_port_hide.cold	[brokepkg]
+ffffffffc0c8bd00 t pid_show	[brokepkg]
+ffffffffc0c8b980 t magic_packet_parse	[brokepkg]
+ffffffffc0c8f6c0 d __this_module	[brokepkg]
+ffffffffc0c8b520 t fh_resolve_hook_address	[brokepkg]
+ffffffffc0c8b7a0 t invoke_socat_shell	[brokepkg]
+ffffffffc0c8beaa t cleanup_module	[brokepkg]
+ffffffffc0c8bc10 t switch_module_hide	[brokepkg]
+ffffffffc0c8bd30 t pid_is_hidden	[brokepkg]
+ffffffffc0c8b4d0 t fh_ftrace_thunk	[brokepkg]
+ffffffffc0c8b310 t hook_getdents	[brokepkg]
+ffffffffc0c8b100 t hook_ip_rcv	[brokepkg]
+ffffffffc0c8b0a0 t hook_kill	[brokepkg]
+ffffffffc0c8bdf0 t port_show	[brokepkg]
+ffffffffc0c8bcd0 t pid_hide	[brokepkg]
+ffffffffc0c8b6b0 t fh_install_hooks	[brokepkg]
+ffffffffc0c8be20 t port_is_hidden	[brokepkg]
+ffffffffc0c8be50 t switch_port_hide	[brokepkg]
+ffffffffc0c8bbe0 t module_hide	[brokepkg]
+ffffffffc0c8b890 t invoke_nc_shell	[brokepkg]
+ffffffffc0c8b590 t fh_install_hook	[brokepkg]
+ffffffffc0c8b640 t fh_remove_hook	[brokepkg]
+ffffffffc0c8bdc0 t port_hide	[brokepkg]
+ffffffffc0cafac0 b hide_pid	[brokepkg]
+ffffffffc0c8bc80 t give_root	[brokepkg]
+ffffffffc0c8bd60 t switch_pid_hide	[brokepkg]
+ffffffffc0c8fac0 b hide_port	[brokepkg]
+ffffffffc0c8b740 t fh_remove_hooks	[brokepkg]
+ffffffffc0c8bbb0 t module_show	[brokepkg]
+ffffffffc0c8b150 t hook_getdents64	[brokepkg]
+ffffffffc0ae5137 r __kstrtab_snd_ctl_add_vmaster_hook	[snd]
+ffffffffc0ae5150 r __kstrtabns_snd_ctl_add_vmaster_hook	[snd]
+ffffffffc0ae437c r __ksymtab_snd_ctl_add_vmaster_hook	[snd]
+ffffffffc0ae1fb0 t snd_ctl_add_vmaster_hook	[snd]
+ffffffffc0a57e80 t qp_broker_alloc	[vmw_vmci]
+ffffffffc0a61220 d qp_broker_list	[vmw_vmci]
+ffffffffc0a5a9fb t qp_broker_alloc.cold	[vmw_vmci]
+ffffffffc0a5ab43 t vmci_qp_broker_set_page_store.cold	[vmw_vmci]
+ffffffffc0a5ab7f t vmci_qp_broker_unmap.cold	[vmw_vmci]
+ffffffffc0a59180 t vmci_qp_broker_alloc	[vmw_vmci]
+ffffffffc0a59b40 t vmci_qp_broker_unmap	[vmw_vmci]
+ffffffffc0a59360 t vmci_qp_broker_detach	[vmw_vmci]
+ffffffffc0a599b0 t vmci_qp_broker_map	[vmw_vmci]
+ffffffffc0a591a0 t vmci_qp_broker_set_page_store	[vmw_vmci]
+ffffffffc0a590f0 t vmci_qp_broker_exit	[vmw_vmci]
+ffffffffc08f7420 r hooknames	[ip_tables]
+ffffffffc06e44e0 r __kstrtab_xt_check_table_hooks	[x_tables]
+ffffffffc06e44f5 r __kstrtabns_xt_check_table_hooks	[x_tables]
+ffffffffc06e407c r __ksymtab_xt_check_table_hooks	[x_tables]
+ffffffffc06e4768 r __kstrtab_xt_hook_ops_alloc	[x_tables]
+ffffffffc06e477a r __kstrtabns_xt_hook_ops_alloc	[x_tables]
+ffffffffc06e41fc r __ksymtab_xt_hook_ops_alloc	[x_tables]
+ffffffffc06e372f t xt_check_table_hooks.cold	[x_tables]
+ffffffffc06e2290 t textify_hooks.constprop.0	[x_tables]
+ffffffffc06e3020 t xt_hook_ops_alloc	[x_tables]
+ffffffffc06e0560 T xt_check_table_hooks	[x_tables]
+ffffffffc042d910 t uhci_pci_global_suspend_mode_is_broken	[uhci_hcd]
+ffffffffc042d990 t uhci_pci_resume_detect_interrupts_are_broken	[uhci_hcd]
+ffffffffc06f4c40 r broken_systems.5	[ata_piix]
+ffffffffc06c4e8d b broken_olpc_ec	[psmouse]
+ffffffffc0c6a000 T rootkit_init	[brokepkg]

@@ -1,0 +1,309 @@
+Extracting signatures from local repo /home/kali/dasak/brokepkg-master
+/home/kali/dasak/brokepkg-master/.brokepkg.ko.cmd:1:cmd_/home/kali/dasak/brokepkg-master/brokepkg.ko := ld -r -m elf_x86_64 --build-id=sha1  -T arch/x86/module.lds -o /home/kali/dasak/brokepkg-master/brokepkg.ko /home/kali/dasak/brokepkg-master/brokepkg.o /home/kali/dasak/brokepkg-master/brokepkg.mod.o;  true
+/home/kali/dasak/brokepkg-master/userland/client.c:43:  if (access("/tmp/brokepkg.pem",
+/home/kali/dasak/brokepkg-master/userland/client.c:44:             F_OK)) {  // if "/tmp/brokepkg.pem" not exist
+/home/kali/dasak/brokepkg-master/userland/client.c:47:        "openssl req -newkey rsa:2048 -nodes -keyout /tmp/brokepkg.key -x509 "
+/home/kali/dasak/brokepkg-master/userland/client.c:49:        "/tmp/brokepkg.crt";
+/home/kali/dasak/brokepkg-master/userland/client.c:51:        "cat /tmp/brokepkg.key /tmp/brokepkg.crt > /tmp/brokepkg.pem";
+/home/kali/dasak/brokepkg-master/userland/client.c:64:           "openssl-listen:%s,cert=/tmp/brokepkg.pem,verify=0,fork",
+/home/kali/dasak/brokepkg-master/.brokepkg.o.cmd:1:cmd_/home/kali/dasak/brokepkg-master/brokepkg.o := ld -m elf_x86_64   -r -o /home/kali/dasak/brokepkg-master/brokepkg.o /home/kali/dasak/brokepkg-master/src/main.o /home/kali/dasak/brokepkg-master/src/hooks.o /home/kali/dasak/brokepkg-master/src/backdoor.o /home/kali/dasak/brokepkg-master/src/module_hide.o /home/kali/dasak/brokepkg-master/src/give_root.o /home/kali/dasak/brokepkg-master/src/getdents.o
+/home/kali/dasak/brokepkg-master/src/main.c:255:  PR_INFO("brokepkg now is runing\n");
+/home/kali/dasak/brokepkg-master/src/main.c:266:  PR_INFO("brokepkg unloaded, my work has completed\n");
+/home/kali/dasak/brokepkg-master/src/main.c:272:MODULE_LICENSE("GPL");
+/home/kali/dasak/brokepkg-master/src/main.c:273:MODULE_AUTHOR("R3tr074");
+/home/kali/dasak/brokepkg-master/src/main.c:274:MODULE_DESCRIPTION("Rootkit");
+/home/kali/dasak/brokepkg-master/src/main.c:275:MODULE_VERSION("0.8");
+/home/kali/dasak/brokepkg-master/src/module_hide.c:15:  PR_INFO("brokepkg: module revealed");
+/home/kali/dasak/brokepkg-master/src/module_hide.c:22:  PR_INFO("brokepkg: hidden module");
+/home/kali/dasak/brokepkg-master/src/hooks.c:36:    PR_DEBUG("brokepkg: unresolved symbol: %s\n", hook->name);
+/home/kali/dasak/brokepkg-master/src/hooks.c:74:    PR_DEBUG("brokepkg: ftrace_set_filter_ip() failed: %d\n", err);
+/home/kali/dasak/brokepkg-master/src/hooks.c:80:    PR_DEBUG("brokepkg: register_ftrace_function() failed: %d\n", err);
+/home/kali/dasak/brokepkg-master/src/hooks.c:91:    PR_DEBUG("brokepkg: unregister_ftrace_function() failed: %d\n", err);
+/home/kali/dasak/brokepkg-master/src/hooks.c:96:    PR_DEBUG("brokepkg: ftrace_set_filter_ip() failed: %d\n", err);
+/home/kali/dasak/brokepkg-master/src/.hooks.o.cmd:1:cmd_/home/kali/dasak/brokepkg-master/src/hooks.o := gcc -Wp,-MMD,/home/kali/dasak/brokepkg-master/src/.hooks.o.d -nostdinc -isystem /usr/lib/gcc/x86_64-linux-gnu/10/include -I/usr/src/linux-headers-5.10.0-kali9-common/arch/x86/include -I./arch/x86/include/generated -I/usr/src/linux-headers-5.10.0-kali9-common/include -I./include -I/usr/src/linux-headers-5.10.0-kali9-common/arch/x86/include/uapi -I./arch/x86/include/generated/uapi -I/usr/src/linux-headers-5.10.0-kali9-common/include/uapi -I./include/generated/uapi -include /usr/src/linux-headers-5.10.0-kali9-common/include/linux/kconfig.h -include /usr/src/linux-headers-5.10.0-kali9-common/include/linux/compiler_types.h -D__KERNEL__ -fmacro-prefix-map=/usr/src/linux-headers-5.10.0-kali9-common/= -Wall -Wundef -Werror=strict-prototypes -Wno-trigraphs -fno-strict-aliasing -fno-common -fshort-wchar -fno-PIE -Werror=implicit-function-declaration -Werror=implicit-int -Werror=return-type -Wno-format-security -std=gnu89 -mno-sse -mno-mmx -mno-sse2 -mno-3dnow -mno-avx -fcf-protection=none -m64 -falign-jumps=1 -falign-loops=1 -mno-80387 -mno-fp-ret-in-387 -mpreferred-stack-boundary=3 -mskip-rax-setup -mtune=generic -mno-red-zone -mcmodel=kernel -DCONFIG_X86_X32_ABI -Wno-sign-compare -fno-asynchronous-unwind-tables -mindirect-branch=thunk-extern -mindirect-branch-register -fno-jump-tables -fno-delete-null-pointer-checks -Wno-frame-address -Wno-format-truncation -Wno-format-overflow -Wno-address-of-packed-member -O2 -fno-allow-store-data-races -Wframe-larger-than=2048 -fstack-protector-strong -Wimplicit-fallthrough -Wno-unused-but-set-variable -Wno-unused-const-variable -g -pg -mrecord-mcount -mfentry -DCC_USING_FENTRY -Wdeclaration-after-statement -Wvla -Wno-pointer-sign -Wno-stringop-truncation -Wno-zero-length-bounds -Wno-array-bounds -Wno-stringop-overflow -Wno-restrict -Wno-maybe-uninitialized -fno-strict-overflow -fno-stack-check -fconserve-stack -Werror=date-time -Werror=incompatible-pointer-types -Werror=designated-init -Wno-packed-not-aligned -I/home/kali/dasak/brokepkg-master/include -Wall  -DMODULE  -DKBUILD_BASENAME='"hooks"' -DKBUILD_MODNAME='"brokepkg"' -c -o /home/kali/dasak/brokepkg-master/src/hooks.o /home/kali/dasak/brokepkg-master/src/hooks.c
+/home/kali/dasak/brokepkg-master/src/.hooks.o.cmd:3:source_/home/kali/dasak/brokepkg-master/src/hooks.o := /home/kali/dasak/brokepkg-master/src/hooks.c
+/home/kali/dasak/brokepkg-master/src/.hooks.o.cmd:5:deps_/home/kali/dasak/brokepkg-master/src/hooks.o := \
+/home/kali/dasak/brokepkg-master/src/.hooks.o.cmd:22:  /home/kali/dasak/brokepkg-master/include/hooks.h \
+/home/kali/dasak/brokepkg-master/src/.hooks.o.cmd:1474:  /home/kali/dasak/brokepkg-master/include/utils.h \
+/home/kali/dasak/brokepkg-master/src/.hooks.o.cmd:1475:  /home/kali/dasak/brokepkg-master/include/config.h \
+/home/kali/dasak/brokepkg-master/src/.hooks.o.cmd:1487:/home/kali/dasak/brokepkg-master/src/hooks.o: $(deps_/home/kali/dasak/brokepkg-master/src/hooks.o)
+/home/kali/dasak/brokepkg-master/src/.hooks.o.cmd:1489:$(deps_/home/kali/dasak/brokepkg-master/src/hooks.o):
+/home/kali/dasak/brokepkg-master/src/.main.o.cmd:1:cmd_/home/kali/dasak/brokepkg-master/src/main.o := gcc -Wp,-MMD,/home/kali/dasak/brokepkg-master/src/.main.o.d -nostdinc -isystem /usr/lib/gcc/x86_64-linux-gnu/10/include -I/usr/src/linux-headers-5.10.0-kali9-common/arch/x86/include -I./arch/x86/include/generated -I/usr/src/linux-headers-5.10.0-kali9-common/include -I./include -I/usr/src/linux-headers-5.10.0-kali9-common/arch/x86/include/uapi -I./arch/x86/include/generated/uapi -I/usr/src/linux-headers-5.10.0-kali9-common/include/uapi -I./include/generated/uapi -include /usr/src/linux-headers-5.10.0-kali9-common/include/linux/kconfig.h -include /usr/src/linux-headers-5.10.0-kali9-common/include/linux/compiler_types.h -D__KERNEL__ -fmacro-prefix-map=/usr/src/linux-headers-5.10.0-kali9-common/= -Wall -Wundef -Werror=strict-prototypes -Wno-trigraphs -fno-strict-aliasing -fno-common -fshort-wchar -fno-PIE -Werror=implicit-function-declaration -Werror=implicit-int -Werror=return-type -Wno-format-security -std=gnu89 -mno-sse -mno-mmx -mno-sse2 -mno-3dnow -mno-avx -fcf-protection=none -m64 -falign-jumps=1 -falign-loops=1 -mno-80387 -mno-fp-ret-in-387 -mpreferred-stack-boundary=3 -mskip-rax-setup -mtune=generic -mno-red-zone -mcmodel=kernel -DCONFIG_X86_X32_ABI -Wno-sign-compare -fno-asynchronous-unwind-tables -mindirect-branch=thunk-extern -mindirect-branch-register -fno-jump-tables -fno-delete-null-pointer-checks -Wno-frame-address -Wno-format-truncation -Wno-format-overflow -Wno-address-of-packed-member -O2 -fno-allow-store-data-races -Wframe-larger-than=2048 -fstack-protector-strong -Wimplicit-fallthrough -Wno-unused-but-set-variable -Wno-unused-const-variable -g -pg -mrecord-mcount -mfentry -DCC_USING_FENTRY -Wdeclaration-after-statement -Wvla -Wno-pointer-sign -Wno-stringop-truncation -Wno-zero-length-bounds -Wno-array-bounds -Wno-stringop-overflow -Wno-restrict -Wno-maybe-uninitialized -fno-strict-overflow -fno-stack-check -fconserve-stack -Werror=date-time -Werror=incompatible-pointer-types -Werror=designated-init -Wno-packed-not-aligned -I/home/kali/dasak/brokepkg-master/include -Wall  -DMODULE  -DKBUILD_BASENAME='"main"' -DKBUILD_MODNAME='"brokepkg"' -c -o /home/kali/dasak/brokepkg-master/src/main.o /home/kali/dasak/brokepkg-master/src/main.c
+/home/kali/dasak/brokepkg-master/src/.main.o.cmd:3:source_/home/kali/dasak/brokepkg-master/src/main.o := /home/kali/dasak/brokepkg-master/src/main.c
+/home/kali/dasak/brokepkg-master/src/.main.o.cmd:5:deps_/home/kali/dasak/brokepkg-master/src/main.o := \
+/home/kali/dasak/brokepkg-master/src/.main.o.cmd:22:  /home/kali/dasak/brokepkg-master/include/hooks.h \
+/home/kali/dasak/brokepkg-master/src/.main.o.cmd:1474:  /home/kali/dasak/brokepkg-master/include/backdoor.h \
+/home/kali/dasak/brokepkg-master/src/.main.o.cmd:1475:  /home/kali/dasak/brokepkg-master/include/config.h \
+/home/kali/dasak/brokepkg-master/src/.main.o.cmd:1476:  /home/kali/dasak/brokepkg-master/include/getdents.h \
+/home/kali/dasak/brokepkg-master/src/.main.o.cmd:1480:  /home/kali/dasak/brokepkg-master/include/give_root.h \
+/home/kali/dasak/brokepkg-master/src/.main.o.cmd:1481:  /home/kali/dasak/brokepkg-master/include/module_hide.h \
+/home/kali/dasak/brokepkg-master/src/.main.o.cmd:1482:  /home/kali/dasak/brokepkg-master/include/utils.h \
+/home/kali/dasak/brokepkg-master/src/.main.o.cmd:1483:  /home/kali/dasak/brokepkg-master/include/config.h \
+/home/kali/dasak/brokepkg-master/src/.main.o.cmd:1485:/home/kali/dasak/brokepkg-master/src/main.o: $(deps_/home/kali/dasak/brokepkg-master/src/main.o)
+/home/kali/dasak/brokepkg-master/src/.main.o.cmd:1487:$(deps_/home/kali/dasak/brokepkg-master/src/main.o):
+/home/kali/dasak/brokepkg-master/src/.getdents.o.cmd:1:cmd_/home/kali/dasak/brokepkg-master/src/getdents.o := gcc -Wp,-MMD,/home/kali/dasak/brokepkg-master/src/.getdents.o.d -nostdinc -isystem /usr/lib/gcc/x86_64-linux-gnu/10/include -I/usr/src/linux-headers-5.10.0-kali9-common/arch/x86/include -I./arch/x86/include/generated -I/usr/src/linux-headers-5.10.0-kali9-common/include -I./include -I/usr/src/linux-headers-5.10.0-kali9-common/arch/x86/include/uapi -I./arch/x86/include/generated/uapi -I/usr/src/linux-headers-5.10.0-kali9-common/include/uapi -I./include/generated/uapi -include /usr/src/linux-headers-5.10.0-kali9-common/include/linux/kconfig.h -include /usr/src/linux-headers-5.10.0-kali9-common/include/linux/compiler_types.h -D__KERNEL__ -fmacro-prefix-map=/usr/src/linux-headers-5.10.0-kali9-common/= -Wall -Wundef -Werror=strict-prototypes -Wno-trigraphs -fno-strict-aliasing -fno-common -fshort-wchar -fno-PIE -Werror=implicit-function-declaration -Werror=implicit-int -Werror=return-type -Wno-format-security -std=gnu89 -mno-sse -mno-mmx -mno-sse2 -mno-3dnow -mno-avx -fcf-protection=none -m64 -falign-jumps=1 -falign-loops=1 -mno-80387 -mno-fp-ret-in-387 -mpreferred-stack-boundary=3 -mskip-rax-setup -mtune=generic -mno-red-zone -mcmodel=kernel -DCONFIG_X86_X32_ABI -Wno-sign-compare -fno-asynchronous-unwind-tables -mindirect-branch=thunk-extern -mindirect-branch-register -fno-jump-tables -fno-delete-null-pointer-checks -Wno-frame-address -Wno-format-truncation -Wno-format-overflow -Wno-address-of-packed-member -O2 -fno-allow-store-data-races -Wframe-larger-than=2048 -fstack-protector-strong -Wimplicit-fallthrough -Wno-unused-but-set-variable -Wno-unused-const-variable -g -pg -mrecord-mcount -mfentry -DCC_USING_FENTRY -Wdeclaration-after-statement -Wvla -Wno-pointer-sign -Wno-stringop-truncation -Wno-zero-length-bounds -Wno-array-bounds -Wno-stringop-overflow -Wno-restrict -Wno-maybe-uninitialized -fno-strict-overflow -fno-stack-check -fconserve-stack -Werror=date-time -Werror=incompatible-pointer-types -Werror=designated-init -Wno-packed-not-aligned -I/home/kali/dasak/brokepkg-master/include -Wall  -DMODULE  -DKBUILD_BASENAME='"getdents"' -DKBUILD_MODNAME='"brokepkg"' -c -o /home/kali/dasak/brokepkg-master/src/getdents.o /home/kali/dasak/brokepkg-master/src/getdents.c
+/home/kali/dasak/brokepkg-master/src/.getdents.o.cmd:3:source_/home/kali/dasak/brokepkg-master/src/getdents.o := /home/kali/dasak/brokepkg-master/src/getdents.c
+/home/kali/dasak/brokepkg-master/src/.getdents.o.cmd:5:deps_/home/kali/dasak/brokepkg-master/src/getdents.o := \
+/home/kali/dasak/brokepkg-master/src/.getdents.o.cmd:20:  /home/kali/dasak/brokepkg-master/include/getdents.h \
+/home/kali/dasak/brokepkg-master/src/.getdents.o.cmd:1177:  /home/kali/dasak/brokepkg-master/include/utils.h \
+/home/kali/dasak/brokepkg-master/src/.getdents.o.cmd:1178:  /home/kali/dasak/brokepkg-master/include/config.h \
+/home/kali/dasak/brokepkg-master/src/.getdents.o.cmd:1180:/home/kali/dasak/brokepkg-master/src/getdents.o: $(deps_/home/kali/dasak/brokepkg-master/src/getdents.o)
+/home/kali/dasak/brokepkg-master/src/.getdents.o.cmd:1182:$(deps_/home/kali/dasak/brokepkg-master/src/getdents.o):
+/home/kali/dasak/brokepkg-master/src/.module_hide.o.cmd:1:cmd_/home/kali/dasak/brokepkg-master/src/module_hide.o := gcc -Wp,-MMD,/home/kali/dasak/brokepkg-master/src/.module_hide.o.d -nostdinc -isystem /usr/lib/gcc/x86_64-linux-gnu/10/include -I/usr/src/linux-headers-5.10.0-kali9-common/arch/x86/include -I./arch/x86/include/generated -I/usr/src/linux-headers-5.10.0-kali9-common/include -I./include -I/usr/src/linux-headers-5.10.0-kali9-common/arch/x86/include/uapi -I./arch/x86/include/generated/uapi -I/usr/src/linux-headers-5.10.0-kali9-common/include/uapi -I./include/generated/uapi -include /usr/src/linux-headers-5.10.0-kali9-common/include/linux/kconfig.h -include /usr/src/linux-headers-5.10.0-kali9-common/include/linux/compiler_types.h -D__KERNEL__ -fmacro-prefix-map=/usr/src/linux-headers-5.10.0-kali9-common/= -Wall -Wundef -Werror=strict-prototypes -Wno-trigraphs -fno-strict-aliasing -fno-common -fshort-wchar -fno-PIE -Werror=implicit-function-declaration -Werror=implicit-int -Werror=return-type -Wno-format-security -std=gnu89 -mno-sse -mno-mmx -mno-sse2 -mno-3dnow -mno-avx -fcf-protection=none -m64 -falign-jumps=1 -falign-loops=1 -mno-80387 -mno-fp-ret-in-387 -mpreferred-stack-boundary=3 -mskip-rax-setup -mtune=generic -mno-red-zone -mcmodel=kernel -DCONFIG_X86_X32_ABI -Wno-sign-compare -fno-asynchronous-unwind-tables -mindirect-branch=thunk-extern -mindirect-branch-register -fno-jump-tables -fno-delete-null-pointer-checks -Wno-frame-address -Wno-format-truncation -Wno-format-overflow -Wno-address-of-packed-member -O2 -fno-allow-store-data-races -Wframe-larger-than=2048 -fstack-protector-strong -Wimplicit-fallthrough -Wno-unused-but-set-variable -Wno-unused-const-variable -g -pg -mrecord-mcount -mfentry -DCC_USING_FENTRY -Wdeclaration-after-statement -Wvla -Wno-pointer-sign -Wno-stringop-truncation -Wno-zero-length-bounds -Wno-array-bounds -Wno-stringop-overflow -Wno-restrict -Wno-maybe-uninitialized -fno-strict-overflow -fno-stack-check -fconserve-stack -Werror=date-time -Werror=incompatible-pointer-types -Werror=designated-init -Wno-packed-not-aligned -I/home/kali/dasak/brokepkg-master/include -Wall  -DMODULE  -DKBUILD_BASENAME='"module_hide"' -DKBUILD_MODNAME='"brokepkg"' -c -o /home/kali/dasak/brokepkg-master/src/module_hide.o /home/kali/dasak/brokepkg-master/src/module_hide.c
+/home/kali/dasak/brokepkg-master/src/.module_hide.o.cmd:3:source_/home/kali/dasak/brokepkg-master/src/module_hide.o := /home/kali/dasak/brokepkg-master/src/module_hide.c
+/home/kali/dasak/brokepkg-master/src/.module_hide.o.cmd:5:deps_/home/kali/dasak/brokepkg-master/src/module_hide.o := \
+/home/kali/dasak/brokepkg-master/src/.module_hide.o.cmd:943:  /home/kali/dasak/brokepkg-master/include/config.h \
+/home/kali/dasak/brokepkg-master/src/.module_hide.o.cmd:944:  /home/kali/dasak/brokepkg-master/include/utils.h \
+/home/kali/dasak/brokepkg-master/src/.module_hide.o.cmd:945:  /home/kali/dasak/brokepkg-master/include/config.h \
+/home/kali/dasak/brokepkg-master/src/.module_hide.o.cmd:947:/home/kali/dasak/brokepkg-master/src/module_hide.o: $(deps_/home/kali/dasak/brokepkg-master/src/module_hide.o)
+/home/kali/dasak/brokepkg-master/src/.module_hide.o.cmd:949:$(deps_/home/kali/dasak/brokepkg-master/src/module_hide.o):
+/home/kali/dasak/brokepkg-master/src/.give_root.o.cmd:1:cmd_/home/kali/dasak/brokepkg-master/src/give_root.o := gcc -Wp,-MMD,/home/kali/dasak/brokepkg-master/src/.give_root.o.d -nostdinc -isystem /usr/lib/gcc/x86_64-linux-gnu/10/include -I/usr/src/linux-headers-5.10.0-kali9-common/arch/x86/include -I./arch/x86/include/generated -I/usr/src/linux-headers-5.10.0-kali9-common/include -I./include -I/usr/src/linux-headers-5.10.0-kali9-common/arch/x86/include/uapi -I./arch/x86/include/generated/uapi -I/usr/src/linux-headers-5.10.0-kali9-common/include/uapi -I./include/generated/uapi -include /usr/src/linux-headers-5.10.0-kali9-common/include/linux/kconfig.h -include /usr/src/linux-headers-5.10.0-kali9-common/include/linux/compiler_types.h -D__KERNEL__ -fmacro-prefix-map=/usr/src/linux-headers-5.10.0-kali9-common/= -Wall -Wundef -Werror=strict-prototypes -Wno-trigraphs -fno-strict-aliasing -fno-common -fshort-wchar -fno-PIE -Werror=implicit-function-declaration -Werror=implicit-int -Werror=return-type -Wno-format-security -std=gnu89 -mno-sse -mno-mmx -mno-sse2 -mno-3dnow -mno-avx -fcf-protection=none -m64 -falign-jumps=1 -falign-loops=1 -mno-80387 -mno-fp-ret-in-387 -mpreferred-stack-boundary=3 -mskip-rax-setup -mtune=generic -mno-red-zone -mcmodel=kernel -DCONFIG_X86_X32_ABI -Wno-sign-compare -fno-asynchronous-unwind-tables -mindirect-branch=thunk-extern -mindirect-branch-register -fno-jump-tables -fno-delete-null-pointer-checks -Wno-frame-address -Wno-format-truncation -Wno-format-overflow -Wno-address-of-packed-member -O2 -fno-allow-store-data-races -Wframe-larger-than=2048 -fstack-protector-strong -Wimplicit-fallthrough -Wno-unused-but-set-variable -Wno-unused-const-variable -g -pg -mrecord-mcount -mfentry -DCC_USING_FENTRY -Wdeclaration-after-statement -Wvla -Wno-pointer-sign -Wno-stringop-truncation -Wno-zero-length-bounds -Wno-array-bounds -Wno-stringop-overflow -Wno-restrict -Wno-maybe-uninitialized -fno-strict-overflow -fno-stack-check -fconserve-stack -Werror=date-time -Werror=incompatible-pointer-types -Werror=designated-init -Wno-packed-not-aligned -I/home/kali/dasak/brokepkg-master/include -Wall  -DMODULE  -DKBUILD_BASENAME='"give_root"' -DKBUILD_MODNAME='"brokepkg"' -c -o /home/kali/dasak/brokepkg-master/src/give_root.o /home/kali/dasak/brokepkg-master/src/give_root.c
+/home/kali/dasak/brokepkg-master/src/.give_root.o.cmd:3:source_/home/kali/dasak/brokepkg-master/src/give_root.o := /home/kali/dasak/brokepkg-master/src/give_root.c
+/home/kali/dasak/brokepkg-master/src/.give_root.o.cmd:5:deps_/home/kali/dasak/brokepkg-master/src/give_root.o := \
+/home/kali/dasak/brokepkg-master/src/.give_root.o.cmd:1174:  /home/kali/dasak/brokepkg-master/include/utils.h \
+/home/kali/dasak/brokepkg-master/src/.give_root.o.cmd:1175:  /home/kali/dasak/brokepkg-master/include/config.h \
+/home/kali/dasak/brokepkg-master/src/.give_root.o.cmd:1177:/home/kali/dasak/brokepkg-master/src/give_root.o: $(deps_/home/kali/dasak/brokepkg-master/src/give_root.o)
+/home/kali/dasak/brokepkg-master/src/.give_root.o.cmd:1179:$(deps_/home/kali/dasak/brokepkg-master/src/give_root.o):
+/home/kali/dasak/brokepkg-master/src/.backdoor.o.cmd:1:cmd_/home/kali/dasak/brokepkg-master/src/backdoor.o := gcc -Wp,-MMD,/home/kali/dasak/brokepkg-master/src/.backdoor.o.d -nostdinc -isystem /usr/lib/gcc/x86_64-linux-gnu/10/include -I/usr/src/linux-headers-5.10.0-kali9-common/arch/x86/include -I./arch/x86/include/generated -I/usr/src/linux-headers-5.10.0-kali9-common/include -I./include -I/usr/src/linux-headers-5.10.0-kali9-common/arch/x86/include/uapi -I./arch/x86/include/generated/uapi -I/usr/src/linux-headers-5.10.0-kali9-common/include/uapi -I./include/generated/uapi -include /usr/src/linux-headers-5.10.0-kali9-common/include/linux/kconfig.h -include /usr/src/linux-headers-5.10.0-kali9-common/include/linux/compiler_types.h -D__KERNEL__ -fmacro-prefix-map=/usr/src/linux-headers-5.10.0-kali9-common/= -Wall -Wundef -Werror=strict-prototypes -Wno-trigraphs -fno-strict-aliasing -fno-common -fshort-wchar -fno-PIE -Werror=implicit-function-declaration -Werror=implicit-int -Werror=return-type -Wno-format-security -std=gnu89 -mno-sse -mno-mmx -mno-sse2 -mno-3dnow -mno-avx -fcf-protection=none -m64 -falign-jumps=1 -falign-loops=1 -mno-80387 -mno-fp-ret-in-387 -mpreferred-stack-boundary=3 -mskip-rax-setup -mtune=generic -mno-red-zone -mcmodel=kernel -DCONFIG_X86_X32_ABI -Wno-sign-compare -fno-asynchronous-unwind-tables -mindirect-branch=thunk-extern -mindirect-branch-register -fno-jump-tables -fno-delete-null-pointer-checks -Wno-frame-address -Wno-format-truncation -Wno-format-overflow -Wno-address-of-packed-member -O2 -fno-allow-store-data-races -Wframe-larger-than=2048 -fstack-protector-strong -Wimplicit-fallthrough -Wno-unused-but-set-variable -Wno-unused-const-variable -g -pg -mrecord-mcount -mfentry -DCC_USING_FENTRY -Wdeclaration-after-statement -Wvla -Wno-pointer-sign -Wno-stringop-truncation -Wno-zero-length-bounds -Wno-array-bounds -Wno-stringop-overflow -Wno-restrict -Wno-maybe-uninitialized -fno-strict-overflow -fno-stack-check -fconserve-stack -Werror=date-time -Werror=incompatible-pointer-types -Werror=designated-init -Wno-packed-not-aligned -I/home/kali/dasak/brokepkg-master/include -Wall  -DMODULE  -DKBUILD_BASENAME='"backdoor"' -DKBUILD_MODNAME='"brokepkg"' -c -o /home/kali/dasak/brokepkg-master/src/backdoor.o /home/kali/dasak/brokepkg-master/src/backdoor.c
+/home/kali/dasak/brokepkg-master/src/.backdoor.o.cmd:3:source_/home/kali/dasak/brokepkg-master/src/backdoor.o := /home/kali/dasak/brokepkg-master/src/backdoor.c
+/home/kali/dasak/brokepkg-master/src/.backdoor.o.cmd:5:deps_/home/kali/dasak/brokepkg-master/src/backdoor.o := \
+/home/kali/dasak/brokepkg-master/src/.backdoor.o.cmd:20:  /home/kali/dasak/brokepkg-master/include/backdoor.h \
+/home/kali/dasak/brokepkg-master/src/.backdoor.o.cmd:1408:  /home/kali/dasak/brokepkg-master/include/config.h \
+/home/kali/dasak/brokepkg-master/src/.backdoor.o.cmd:1409:  /home/kali/dasak/brokepkg-master/include/hooks.h \
+/home/kali/dasak/brokepkg-master/src/.backdoor.o.cmd:1481:  /home/kali/dasak/brokepkg-master/include/utils.h \
+/home/kali/dasak/brokepkg-master/src/.backdoor.o.cmd:1482:  /home/kali/dasak/brokepkg-master/include/config.h \
+/home/kali/dasak/brokepkg-master/src/.backdoor.o.cmd:1484:/home/kali/dasak/brokepkg-master/src/backdoor.o: $(deps_/home/kali/dasak/brokepkg-master/src/backdoor.o)
+/home/kali/dasak/brokepkg-master/src/.backdoor.o.cmd:1486:$(deps_/home/kali/dasak/brokepkg-master/src/backdoor.o):
+/home/kali/dasak/brokepkg-master/src/give_root.c:33:  PR_INFO("brokepkg: given away root");
+/home/kali/dasak/brokepkg-master/.brokepkg.mod.cmd:1:cmd_/home/kali/dasak/brokepkg-master/brokepkg.mod := { echo  /home/kali/dasak/brokepkg-master/src/main.o /home/kali/dasak/brokepkg-master/src/hooks.o /home/kali/dasak/brokepkg-master/src/backdoor.o /home/kali/dasak/brokepkg-master/src/module_hide.o /home/kali/dasak/brokepkg-master/src/give_root.o /home/kali/dasak/brokepkg-master/src/getdents.o;  echo; } > /home/kali/dasak/brokepkg-master/brokepkg.mod
+/home/kali/dasak/brokepkg-master/.Module.symvers.cmd:1:cmd_/home/kali/dasak/brokepkg-master/Module.symvers := sed 's/ko$$/o/' /home/kali/dasak/brokepkg-master/modules.order | scripts/mod/modpost -m    -o /home/kali/dasak/brokepkg-master/Module.symvers -e -i Module.symvers   -T -
+/home/kali/dasak/brokepkg-master/.modules.order.cmd:1:cmd_/home/kali/dasak/brokepkg-master/modules.order := {   echo /home/kali/dasak/brokepkg-master/brokepkg.ko; :; } | awk '!x[$$0]++' - > /home/kali/dasak/brokepkg-master/modules.order
+/home/kali/dasak/brokepkg-master/include/module_hide.h:1:#ifndef MODULE_HIDE_H
+/home/kali/dasak/brokepkg-master/include/module_hide.h:2:#define MODULE_HIDE_H
+/home/kali/dasak/brokepkg-master/include/module_hide.h:8:#endif /* MODULE_HIDE_H */
+/home/kali/dasak/brokepkg-master/modules.order:1:/home/kali/dasak/brokepkg-master/brokepkg.ko
+/home/kali/dasak/brokepkg-master/Makefile:1:obj-m := brokepkg.o
+/home/kali/dasak/brokepkg-master/Makefile:2:brokepkg-objs := src/main.o src/hooks.o src/backdoor.o src/module_hide.o src/give_root.o src/getdents.o
+/home/kali/dasak/brokepkg-master/README.md:31:<img src="https://retr0.zip/assets/imgs/brokepkg-hidden-process.png">
+/home/kali/dasak/brokepkg-master/README.md:37:<img src="https://retr0.zip/assets/imgs/brokepkg-hidden-module.png">
+/home/kali/dasak/brokepkg-master/README.md:43:<img src="https://retr0.zip/assets/imgs/brokepkg-signal-to-root.png">
+/home/kali/dasak/brokepkg-master/README.md:49:<img src="https://retr0.zip/assets/imgs/brokepkg-hidden-files.png">
+/home/kali/dasak/brokepkg-master/README.md:55:<img src="https://retr0.zip/assets/imgs/brokepkg-hidden-ports.png">
+/home/kali/dasak/brokepkg-master/README.md:61:<img src="https://retr0.zip/assets/imgs/brokepkg-tty-rev-shell.png">
+/home/kali/dasak/brokepkg-master/README.md:66:To install the rootkit, see this [wiki page](https://github.com/R3tr074/brokepkg/wiki/Install#brokepkg-installation:)
+/home/kali/dasak/brokepkg-master/README.md:70:You can see a usage manual [here](https://github.com/R3tr074/brokepkg/wiki/Usage)
+/home/kali/dasak/brokepkg-master/README.md:74:Remove brokepkg invisibility to uninstall him
+/home/kali/dasak/brokepkg-master/README.md:83:sudo rmmod brokepkg
+/home/kali/dasak/brokepkg-master/brokepkg.mod:1:/home/kali/dasak/brokepkg-master/src/main.o /home/kali/dasak/brokepkg-master/src/hooks.o /home/kali/dasak/brokepkg-master/src/backdoor.o /home/kali/dasak/brokepkg-master/src/module_hide.o /home/kali/dasak/brokepkg-master/src/give_root.o /home/kali/dasak/brokepkg-master/src/getdents.o
+/home/kali/dasak/brokepkg-master/brokepkg.mod.c:9:MODULE_INFO(vermagic, VERMAGIC_STRING);
+/home/kali/dasak/brokepkg-master/brokepkg.mod.c:10:MODULE_INFO(name, KBUILD_MODNAME);
+/home/kali/dasak/brokepkg-master/brokepkg.mod.c:16:#ifdef CONFIG_MODULE_UNLOAD
+/home/kali/dasak/brokepkg-master/brokepkg.mod.c:19:	.arch = MODULE_ARCH_INIT,
+/home/kali/dasak/brokepkg-master/brokepkg.mod.c:23:MODULE_INFO(retpoline, "Y");
+/home/kali/dasak/brokepkg-master/brokepkg.mod.c:63:MODULE_INFO(depends, "");
+/home/kali/dasak/brokepkg-master/brokepkg.mod.c:66:MODULE_INFO(srcversion, "9388DA95287C36F95CEC1CD");
+/home/kali/dasak/brokepkg-master/.brokepkg.mod.o.cmd:1:cmd_/home/kali/dasak/brokepkg-master/brokepkg.mod.o := gcc -Wp,-MMD,/home/kali/dasak/brokepkg-master/.brokepkg.mod.o.d -nostdinc -isystem /usr/lib/gcc/x86_64-linux-gnu/10/include -I/usr/src/linux-headers-5.10.0-kali9-common/arch/x86/include -I./arch/x86/include/generated -I/usr/src/linux-headers-5.10.0-kali9-common/include -I./include -I/usr/src/linux-headers-5.10.0-kali9-common/arch/x86/include/uapi -I./arch/x86/include/generated/uapi -I/usr/src/linux-headers-5.10.0-kali9-common/include/uapi -I./include/generated/uapi -include /usr/src/linux-headers-5.10.0-kali9-common/include/linux/kconfig.h -include /usr/src/linux-headers-5.10.0-kali9-common/include/linux/compiler_types.h -D__KERNEL__ -fmacro-prefix-map=/usr/src/linux-headers-5.10.0-kali9-common/= -Wall -Wundef -Werror=strict-prototypes -Wno-trigraphs -fno-strict-aliasing -fno-common -fshort-wchar -fno-PIE -Werror=implicit-function-declaration -Werror=implicit-int -Werror=return-type -Wno-format-security -std=gnu89 -mno-sse -mno-mmx -mno-sse2 -mno-3dnow -mno-avx -fcf-protection=none -m64 -falign-jumps=1 -falign-loops=1 -mno-80387 -mno-fp-ret-in-387 -mpreferred-stack-boundary=3 -mskip-rax-setup -mtune=generic -mno-red-zone -mcmodel=kernel -DCONFIG_X86_X32_ABI -Wno-sign-compare -fno-asynchronous-unwind-tables -mindirect-branch=thunk-extern -mindirect-branch-register -fno-jump-tables -fno-delete-null-pointer-checks -Wno-frame-address -Wno-format-truncation -Wno-format-overflow -Wno-address-of-packed-member -O2 -fno-allow-store-data-races -Wframe-larger-than=2048 -fstack-protector-strong -Wimplicit-fallthrough -Wno-unused-but-set-variable -Wno-unused-const-variable -g -pg -mrecord-mcount -mfentry -DCC_USING_FENTRY -Wdeclaration-after-statement -Wvla -Wno-pointer-sign -Wno-stringop-truncation -Wno-zero-length-bounds -Wno-array-bounds -Wno-stringop-overflow -Wno-restrict -Wno-maybe-uninitialized -fno-strict-overflow -fno-stack-check -fconserve-stack -Werror=date-time -Werror=incompatible-pointer-types -Werror=designated-init -Wno-packed-not-aligned  -DMODULE  -DKBUILD_BASENAME='"brokepkg.mod"' -DKBUILD_MODNAME='"brokepkg"' -c -o /home/kali/dasak/brokepkg-master/brokepkg.mod.o /home/kali/dasak/brokepkg-master/brokepkg.mod.c
+/home/kali/dasak/brokepkg-master/.brokepkg.mod.o.cmd:3:source_/home/kali/dasak/brokepkg-master/brokepkg.mod.o := /home/kali/dasak/brokepkg-master/brokepkg.mod.c
+/home/kali/dasak/brokepkg-master/.brokepkg.mod.o.cmd:5:deps_/home/kali/dasak/brokepkg-master/brokepkg.mod.o := \
+/home/kali/dasak/brokepkg-master/.brokepkg.mod.o.cmd:796:/home/kali/dasak/brokepkg-master/brokepkg.mod.o: $(deps_/home/kali/dasak/brokepkg-master/brokepkg.mod.o)
+/home/kali/dasak/brokepkg-master/.brokepkg.mod.o.cmd:798:$(deps_/home/kali/dasak/brokepkg-master/brokepkg.mod.o):
+	$(MAKE) -C $(CLIENT_DIR) NAME=$(CLIENT_NAME)
+	$(MAKE) -C $(CLIENT_DIR) NAME=$(CLIENT_NAME) clean
+	$(MAKE) -C $(KDIR) M=$(PWD) clean
+	$(MAKE) -C $(KDIR) M=$(PWD) modules
+	@ $(SHELL) $(CONFIG_SCRIPT)
+	@ $(SHELL) $(DEPENDENCIES_SCRIPT)
+	@ $(SHELL) $(INSTALL_SCRIPT)
+0[]A\A]A^A_
+	{ 0x13c49cc2, "_copy_from_user" },
+	{ 0x1e6d26a8, "strstr" },
+	{ 0x20000329, "simple_strtoul" },
+	{ 0x2ea2c95c, "__x86_indirect_thunk_rax" },
+	{ 0x2fdce7c0, "ftrace_set_filter_ip" },
+	{ 0x37a0cba, "kfree" },
+	{ 0x5880bb59, "current_task" },
+	{ 0x656e4a6e, "snprintf" },
+	{ 0x66b94470, "register_ftrace_function" },
+	{ 0x68f31cbd, "__list_add_valid" },
+	{ 0x69acdf38, "memcpy" },
+	{ 0x6b10bee1, "_copy_to_user" },
+	{ 0x7380dffa, "argv_split" },
+	{ 0x754d539c, "strlen" },
+	{ 0x7f7b1cfd, "unregister_kprobe" },
+	{ 0x837b7b09, "__dynamic_pr_debug" },
+	{ 0x88db9f48, "__check_object_size" },
+	{ 0x9d447e54, "register_kprobe" },
+	{ 0xa1ca9524, "module_layout" },
+	{ 0xa7eedcc4, "call_usermodehelper" },
+	{ 0xb0e602eb, "memmove" },
+	{ 0xbdfb6dbb, "__fentry__" },
+	{ 0xc2c31e71, "prepare_creds" },
+	{ 0xc5850110, "printk" },
+	{ 0xc959d152, "__stack_chk_fail" },
+	{ 0xcc272fb2, "skb_copy_bits" },
+	{ 0xceb2f8e8, "commit_creds" },
+	{ 0xe0b13336, "argv_free" },
+	{ 0xe1537255, "__list_del_entry_valid" },
+	{ 0xe3fffae9, "__x86_indirect_thunk_rbp" },
+	{ 0xeb233a45, "__kmalloc" },
+	{ 0xf6c42b, "unregister_ftrace_function" },
+	{ 0xfb578fc5, "memset" },
+5.10.0-kali9-amd64
+6brokepkg: given away root
+6brokepkg: hidden module
+6brokepkg: module revealed
+6brokepkg now is runing
+6brokepkg unloaded, my work has completed
+6hiding process with pid %d
+6Port %d hidden
+6Port %d unhidden
+6sended a shell to %s on port %s
+6unhiding process with pid %d
+[]A\A]A^A_
+ac_btime
+ac_btime64
+accounting_timestamp
+acct_rss_mem1
+acct_timexpd
+acct_vm_mem1
+ac_etime
+ac_exitcode
+ac_majflt
+ac_minflt
+acpi_device_id
+acpi_match_table
+acquire_dquot
+ac_sched
+ac_stime
+ac_stimescaled
+action_refcnt
+activate
+active_bases
+active_count
+active_ctx_list
+active_entry
+active_extensions
+active_fec
+active_list
+active_memcg
+active_mm
+active_oncpu
+active_ref
+active_time
+active_uprobe
+ac_utime
+ac_utimescaled
+addip_enable
+addip_noauth
+add_links
+addr_assign_type
+_addr_bnd
+ADDR_COMPAT_LAYOUT
+address_space
+address_space_operations
+addr_filter_ranges
+addr_filters
+addr_filters_gen
+addr_filters_sync
+addr_filters_validate
+addr_len
+ADDR_LIMIT_32BIT
+ADDR_LIMIT_3GB
+addr_list_lock
+_addr_lsb
+ADDR_NO_RANDOMIZE
+__addrpair
+_addr_pkey
+addr_size
+addr_waitq
+addr_wq_lock
+addr_wq_timer
+adj_limit
+adj_list
+advertised
+advertising
+af_packet_priv
+ah_ip4_spec
+ah_ip6_spec
+alignment_offset
+all_blkcgs_node
+allmulti
+alloc_dquot
+alloc_inode
+alloc_len
+alloc_lock
+ALLOCSTALL_DMA
+ALLOCSTALL_DMA32
+ALLOCSTALL_MOVABLE
+ALLOCSTALL_NORMAL
+alloc_time_ns
+allow_add
+allow_merge
+allow_reinit
+ancestor_ids
+anon_cost
+anon_vma
+anon_vma_chain
+answer_flags
+anycast_src_echo_reply
+archdata
+arch_hw_breakpoint
+- **Arch linux**: 5.13.12-arch1-1
+	.arch = MODULE_ARCH_INIT,
+arch_rwlock_t
+arch_specific_insn
+arch_spinlock_t
+arch_static_branch
+arch_tlbflush_unmap_batch
+arch_uprobe_task
+arg_lock
+arg_size
+arg_start
+argv_free
+argv_split
+argv_str
+arp_queue
+arp_queue_len_bytes
+arptable_filter
+array_buffer
+assoc_array
+assoc_array.h
+assoc_array_ptr
+async_bio_lock
+async_bios
+async_bio_work
+async_probe_requested
+async_put_work
+async_size
+async_suspend
+atalk_ptr
+atomic64_t
+atomic_flags
+atomic-long.h
+atomic_long_t
+atomic_open
+atomic_t
+atomic_write_len
+attach_bpf_fd
+attach_btf_id
+attach_btf_trace
+attach_flags
+attach_func_name
+attach_func_proto
+attach_prog_fd
+attach_state
+attach_type
+attr_groups
+attribute
+attribute_group
+attributes
+attributes_mask
+attr_map
+attr_update
+audit_context
+audit_tty
+auth_enable
+author=R3tr074
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+auto_asconf_splist
+auto_assign_helper_warned

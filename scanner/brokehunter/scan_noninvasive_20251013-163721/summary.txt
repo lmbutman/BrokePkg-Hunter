@@ -1,0 +1,3 @@
+verdict: likely_installed_hidden
+evidence: brokepkg present in /proc/modules or lsmod, but modinfo did not find on-disk module; no .ko in typical paths.; matching symbols found in /proc/kallsyms
+see: scan_noninvasive_20251013-163721 for raw outputs
