@@ -1,12 +1,10 @@
 #!/usr/bin/env bash
-# detect_brokepkg_noninvasive_v2.sh
-# Read-only, non-invasive checks for brokepkg-like rootkit (repo-specific signatures included).
-# Usage:
-#   ./detect_brokepkg_noninvasive_v2.sh [--repo PATH_TO_LOCAL_REPO] [--deep]
-#   --repo: optional path to local brokepkg repo to strengthen signature matching
-#   --deep: run an exhaustive root grep (can be slow)
+# detect_brokepkg_noninvasive.sh (v2.3)
+# Read-only, non-invasive checks for brokepkg with repo-specific signatures.
+# Usage: ./detect_brokepkg_noninvasive.sh [--repo PATH_TO_LOCAL_REPO] [--deep]
 
 set -euo pipefail
+
 REPO=""
 DEEP=0
 while [[ $# -gt 0 ]]; do
@@ -18,138 +16,110 @@ while [[ $# -gt 0 ]]; do
 done
 
 TS="$(date +%Y%m%d-%H%M%S)"
-OUTDIR="scan_noninvasive_v2_${TS}"
+OUTDIR="scan_noninvasive_${TS}"
 mkdir -p "$OUTDIR"
 
-echo "Non-invasive brokepkg scan (v2) - evidence -> $OUTDIR"
+echo "Non-invasive brokepkg scan -> $OUTDIR"
 
-# Signatures (repo-derived)
-SIG_STRINGS=(
-  "brokepkg"
-  "brokecli"
-  "give_root"
-  "module_hide"
-  "backdoor"
-  "getdents"
-  "hooks"
-  "Remove brokepkg invisibility to uninstall him"
-)
-SIG_FILENAMES=(
-  "brokepkg.o"
-  "src/backdoor.c"
-  "src/getdents.c"
-  "src/give_root.c"
-  "src/hooks.c"
-  "include/module_hide.h"
-)
+SIG_REGEX='brokepkg|brokecli|give_root|module_hide|backdoor|getdents|hooks|Remove brokepkg invisibility to uninstall him'
 
-# Save system facts
-uname -a > "$OUTDIR/uname.txt"
+uname -a > "$OUTDIR/uname.txt" || true
 python3 --version > "$OUTDIR/python_version.txt" 2>&1 || true
-lsmod | tee "$OUTDIR/lsmod.txt"
-cat /proc/modules | tee "$OUTDIR/proc_modules.txt"
+lsmod | tee "$OUTDIR/lsmod.txt" || true
+cat /proc/modules | tee "$OUTDIR/proc_modules.txt" || true
 
-# sysfs module inspection
 if [ -d /sys/module/brokepkg ]; then
-  echo "sys_module_present" > "$OUTDIR/sys_module_present.txt"
+  echo "present" > "$OUTDIR/sys_module_present.txt"
   ls -al /sys/module/brokepkg > "$OUTDIR/sys_module_listing.txt" 2>/dev/null || true
 else
-  echo "sys_module_absent" > "$OUTDIR/sys_module_absent.txt"
+  echo "absent" > "$OUTDIR/sys_module_present.txt"
 fi
 
-# modinfo attempt
 modinfo brokepkg > "$OUTDIR/modinfo.txt" 2>&1 || true
 
-# Search common module paths quickly for .ko / brokepkg-like files
 echo "Searching common module directories (fast)..." | tee "$OUTDIR/search_paths_log.txt"
-for d in /lib/modules /usr/lib/modules /opt /usr/local/lib /root /usr/local/src /usr/src; do
-  if [ -d "$d" ]; then
-    find "$d" -maxdepth 6 -type f -iname "*brokepkg*.ko" -print >> "$OUTDIR/search_paths_log.txt" 2>/dev/null || true
-    find "$d" -maxdepth 6 -type f -iname "*brokepkg*" -print >> "$OUTDIR/search_paths_log.txt" 2>/dev/null || true
+
+search_dirs=(/lib/modules /usr/lib/modules /opt /usr/local/lib /root /usr/local/src /usr/src /etc /usr /home /var)
+
+fast_grep_dirs() {
+  local pattern="$1"; shift
+  if command -v rg >/dev/null 2>&1; then
+    rg -n -I -S -e "$pattern" --hidden --no-messages \
+       --max-depth 6 \
+       --glob '!proc/**' --glob '!sys/**' --glob '!dev/**' \
+       --glob '!run/**'  --glob '!tmp/**' --glob '!var/log/**' \
+       --glob '!boot/**' --glob '!.git/**' --glob '!node_modules/**' \
+       "$@" 2>/dev/null || true      # <- DO NOT fail if no matches
+  else
+    for d in "$@"; do
+      [ -d "$d" ] || continue
+      # find can exit non-zero on perms/etc; don't let -e kill us
+      find "$d" -maxdepth 6 \
+        \( -path "$d/proc/*" -o -path "$d/sys/*" -o -path "$d/dev/*" -o -path "$d/run/*" -o -path "$d/tmp/*" -o -path "$d/var/log/*" -o -path "$d/boot/*" \) -prune -o \
+        -type f -print0 2>/dev/null \
+      | xargs -0 grep -n -I -E "$pattern" 2>/dev/null || true
+    done
   fi
-done
+}
 
-# Targeted grep for repository strings in likely locations (fast)
-echo "Running targeted grep for known brokepkg strings..." | tee -a "$OUTDIR/search_paths_log.txt"
-for s in "${SIG_STRINGS[@]}"; do
-  # search in likely dirs only (faster than full root)
-  grep -R --line-number -I --exclude-dir={proc,sys,dev,run,tmp,var/log} -e "$s" /etc /opt /usr /root /home /var 2>/dev/null | head -n 200 >> "$OUTDIR/search_paths_log.txt" || true
-done
+# 1) Explicit name/file hits (guard find with || true so -e doesn't abort)
+for d in "${search_dirs[@]}"; do
+  [ -d "$d" ] || continue
+  find "$d" -maxdepth 6 -type f \( -iname "*brokepkg*.ko" -o -iname "*brokepkg*" \) -print 2>/dev/null || true
+done >> "$OUTDIR/search_paths_log.txt"
 
-# If user supplied repo path, extract additional file names/strings and store
+# 2) One-pass content grep
+fast_grep_dirs "$SIG_REGEX" "${search_dirs[@]}" | head -n 800 >> "$OUTDIR/search_paths_log.txt"
+
 if [ -n "$REPO" ] && [ -d "$REPO" ]; then
   echo "Using local repo $REPO for extra signatures" > "$OUTDIR/repo_signatures.txt"
-  # collect C file hints and strings (non-binary)
-  grep -R --line-number -E "brokepkg|brokecli|give_root|module_hide|backdoor|getdents|hooks" "$REPO" 2>/dev/null | head -n 500 >> "$OUTDIR/repo_signatures.txt" || true
+  if command -v rg >/dev/null 2>&1; then
+    rg -n -I -S -e "$SIG_REGEX" --no-messages "$REPO" 2>/dev/null | head -n 1000 >> "$OUTDIR/repo_signatures.txt" || true
+  else
+    grep -R -n -I -E "$SIG_REGEX" "$REPO" 2>/dev/null | head -n 1000 >> "$OUTDIR/repo_signatures.txt" || true
+  fi
 fi
 
-# /proc/kallsyms scanning (memory symbols)
-echo "Scanning /proc/kallsyms for known module symbols/strings (if readable)..." > "$OUTDIR/kallsyms_scan.txt"
+echo "Scanning /proc/kallsyms..." > "$OUTDIR/kallsyms_scan.txt"
 if [ -r /proc/kallsyms ]; then
-  for s in "${SIG_STRINGS[@]}"; do
-    grep -i "$s" /proc/kallsyms >> "$OUTDIR/kallsyms_scan.txt" 2>/dev/null || true
-  done
+  grep -i -E "$SIG_REGEX" /proc/kallsyms 2>/dev/null >> "$OUTDIR/kallsyms_scan.txt" || true
 else
   echo "/proc/kallsyms not readable" >> "$OUTDIR/kallsyms_scan.txt"
 fi
 
-# Check for deleted .ko files referenced by processes (deleted symlinks)
-echo "Looking for deleted .ko references in /proc/*/fd (fast)..." > "$OUTDIR/deleted_refs.txt"
+echo "Looking for deleted .ko references..." > "$OUTDIR/deleted_refs.txt"
 for fd in /proc/*/fd/*; do
-  if readlink "$fd" 2>/dev/null | grep -q -iE "brokepkg|.ko \(deleted\)|.ko$"; then
-    readlink "$fd" 2>/dev/null >> "$OUTDIR/deleted_refs.txt" || true
+  target="$(readlink "$fd" 2>/dev/null || true)"
+  if [[ "$target" == *".ko (deleted)"* || "$target" == *"brokepkg"* ]]; then
+    echo "$fd -> $target" >> "$OUTDIR/deleted_refs.txt"
   fi
 done
 
-# Optional deep search across root if --deep requested (can take long)
 if [ "$DEEP" -eq 1 ]; then
-  echo "DEEP MODE: running full-root grep for signatures (this can take a long time)..." | tee -a "$OUTDIR/search_paths_log.txt"
-  for s in "${SIG_STRINGS[@]}"; do
-    # skip large, binary dirs to reduce noise (still heavy)
-    grep -R --line-number -I --exclude-dir={proc,sys,dev,tmp,run,var/log,boot} -e "$s" / 2>/dev/null | head -n 500 >> "$OUTDIR/search_paths_log.txt" || true
-  done
+  echo "DEEP MODE: full-root grep (this can be slow)..." | tee -a "$OUTDIR/search_paths_log.txt"
+  fast_grep_dirs "$SIG_REGEX" / | head -n 3000 >> "$OUTDIR/search_paths_log.txt" || true
 fi
 
-# Persistence/network checks (light)
 systemctl list-unit-files --type=service --no-pager > "$OUTDIR/services_all.txt" 2>/dev/null || true
 crontab -l > "$OUTDIR/crontab_root.txt" 2>/dev/null || true
 ss -tunlp > "$OUTDIR/listening_ports.txt" 2>/dev/null || true
 
-# Compose verdict logic (improved and explicit)
 VERDICT="unknown"
 EVIDENCE=()
 
-# Memory presence: if /proc/modules or lsmod contains brokepkg
-if grep -q -E "^brokepkg\b" "$OUTDIR/proc_modules.txt" 2>/dev/null || grep -q -i "brokepkg" "$OUTDIR/lsmod.txt" 2>/dev/null; then
-  EVIDENCE+=("present_in_memory")
-fi
+grep -q -E "^brokepkg\b" "$OUTDIR/proc_modules.txt" 2>/dev/null && EVIDENCE+=("present_in_memory")
+grep -qi "brokepkg" "$OUTDIR/lsmod.txt" 2>/dev/null && [[ " ${EVIDENCE[*]} " != *" present_in_memory "* ]] && EVIDENCE+=("present_in_memory")
+grep -qi "brokepkg" "$OUTDIR/search_paths_log.txt" 2>/dev/null && EVIDENCE+=("on_disk_artifact_found")
 
-# On-disk detection: did we find any brokepkg file in common dirs?
-if grep -q -i "brokepkg" "$OUTDIR/search_paths_log.txt" 2>/dev/null; then
-  EVIDENCE+=("on_disk_artifact_found")
-fi
-
-# modinfo success check
-if grep -q -i "filename" "$OUTDIR/modinfo.txt" 2>/dev/null; then
+if grep -qi "filename" "$OUTDIR/modinfo.txt" 2>/dev/null; then
   EVIDENCE+=("modinfo_found_on_disk")
 else
-  # modinfo failed - could be deleted after load
-  if grep -q -i "ERROR: Module brokepkg not found" "$OUTDIR/modinfo.txt" 2>/dev/null || ! grep -q -i "filename" "$OUTDIR/modinfo.txt" 2>/dev/null; then
-    EVIDENCE+=("modinfo_missing_or_failed")
-  fi
+  grep -qi "ERROR: Module brokepkg not found" "$OUTDIR/modinfo.txt" 2>/dev/null && EVIDENCE+=("modinfo_missing_or_failed")
 fi
 
-# kallsyms match adds strong evidence of in-memory symbols
-if [ -s "$OUTDIR/kallsyms_scan.txt" ] && grep -q -i -E "brokepkg|brokecli|give_root|module_hide" "$OUTDIR/kallsyms_scan.txt" 2>/dev/null; then
-  EVIDENCE+=("kallsyms_matches")
-fi
+grep -qi -E "$SIG_REGEX" "$OUTDIR/kallsyms_scan.txt" 2>/dev/null && EVIDENCE+=("kallsyms_matches")
+[ -s "$OUTDIR/deleted_refs.txt" ] && EVIDENCE+=("deleted_ko_references")
 
-# Deleted-file references
-if [ -s "$OUTDIR/deleted_refs.txt" ]; then
-  EVIDENCE+=("deleted_ko_references")
-fi
-
-# Determine verdict rules (explicit)
 if printf "%s\n" "${EVIDENCE[@]}" | grep -q "present_in_memory"; then
   if printf "%s\n" "${EVIDENCE[@]}" | grep -q "on_disk_artifact_found"; then
     VERDICT="installed_on_disk_and_in_memory"
@@ -166,26 +136,25 @@ else
   fi
 fi
 
-# Write summary & JSON (timestamped)
-SUMMARY="$OUTDIR/summary.txt"
-cat > "$SUMMARY" <<EOF
-verdict: $VERDICT
-evidence: $(IFS=,; echo "${EVIDENCE[*]}")
-raw_outputs: $OUTDIR
-EOF
+printf "verdict: %s\nevidence: %s\nraw_outputs: %s\n" \
+  "$VERDICT" "$(IFS=,; echo "${EVIDENCE[*]-}")" "$OUTDIR" > "$OUTDIR/summary.txt"
 
-# Also create a JSON result (timestamped, not overwriting previous)
-JSONFN="scan_result_noninvasive_${TS}.json"
-python3 - <<PY > "$OUTDIR/$JSONFN"
-import json
-report={
-  "timestamp":"${TS}",
-  "verdict":"${VERDICT}",
-  "evidence":${(printf '%s\n' "${EVIDENCE[@]}" | python3 -c 'import sys,json; print(json.dumps([l.strip() for l in sys.stdin]))')},
+json_escape() {
+  local s="$1"; s="${s//\\/\\\\}"; s="${s//\"/\\\"}"; s="${s//$'\n'/\\n}"; s="${s//$'\t'/\\t}"; printf '%s' "$s"
 }
-print(json.dumps(report, indent=2))
-PY
+evidence_json="["
+for e in "${EVIDENCE[@]:-}"; do evidence_json="${evidence_json}\"$(json_escape "$e")\","; done
+evidence_json="${evidence_json%,}]"
+
+JSONFN="$OUTDIR/scan_result_noninvasive_${TS}.json"
+{
+  printf '{\n'
+  printf '  "timestamp": "%s",\n' "$TS"
+  printf '  "verdict": "%s",\n' "$(json_escape "$VERDICT")"
+  printf '  "evidence": %s\n' "$evidence_json"
+  printf '}\n'
+} > "$JSONFN"
 
 echo "VERDICT: $VERDICT"
-echo "EVIDENCE: ${EVIDENCE[*]}"
-echo "All raw output in $OUTDIR"
+echo "EVIDENCE: ${EVIDENCE[*]:-none}"
+echo "JSON: $JSONFN"
