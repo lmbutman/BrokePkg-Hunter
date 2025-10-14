@@ -1,0 +1,8 @@
+# Scan output directories
+scan_noninvasive_*/
+scan_active_*/
+scan_*_v*/        # if you version the scripts and their output dirs
+
+# Timestamped JSON reports
+scan_result-*.json
+scan_result_noninvasive_*.json
