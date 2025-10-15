@@ -145,7 +145,7 @@ check_inode_gaps() {
     fi
     
     # Get all visible inodes in directory
-    local visible_inodes=$(ls -lai "$dir" 2>/dev/null | awk '{print $1}' | grep -E '^[0-9]+ | sort -n)
+    local visible_inodes=$(ls -lai "$dir" 2>/dev/null | awk '{print $1}' | grep -E '^[0-9]+' | sort -n)
     
     # Check for gaps in inode sequence that might indicate hidden files
     # This is a heuristic approach
@@ -298,14 +298,14 @@ main() {
                     raw_entries=$(/tmp/getdents_bypass "$dir" 2>/dev/null || echo "")
                     
                     # Check each entry
-                    while IFS= read -r entry; do
+                    echo "$raw_entries" | while IFS= read -r entry; do
                         if [[ "$entry" == *"brokepkg"* ]]; then
                             full_path="$dir/$entry"
                             echo -e "${RED}[!] FOUND (raw): $full_path${NC}"
                             echo "[!] FOUND (raw): $full_path" >> "$LOG_FILE"
                             FOUND_FILES+=("$full_path")
                         fi
-                    done <<< "$raw_entries"
+                    done
                 fi
             done
         fi
