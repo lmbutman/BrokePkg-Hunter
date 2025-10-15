@@ -242,7 +242,7 @@ check_proc_fds() {
         if [ -d "$proc_dir/fd" ]; then
             pid=$(basename "$proc_dir")
             
-            for fd in "$proc_dir/fd"/* 2>/dev/null; do
+            for fd in "$proc_dir/fd"/*; do
                 if [ -L "$fd" ]; then
                     target=$(readlink "$fd" 2>/dev/null || echo "")
                     
@@ -298,14 +298,16 @@ main() {
                     raw_entries=$(/tmp/getdents_bypass "$dir" 2>/dev/null || echo "")
                     
                     # Check each entry
-                    echo "$raw_entries" | while IFS= read -r entry; do
-                        if [[ "$entry" == *"brokepkg"* ]]; then
-                            full_path="$dir/$entry"
-                            echo -e "${RED}[!] FOUND (raw): $full_path${NC}"
-                            echo "[!] FOUND (raw): $full_path" >> "$LOG_FILE"
-                            FOUND_FILES+=("$full_path")
-                        fi
-                    done
+                    if [ -n "$raw_entries" ]; then
+                        echo "$raw_entries" | while IFS= read -r entry; do
+                            if [[ "$entry" == *"brokepkg"* ]]; then
+                                full_path="$dir/$entry"
+                                echo -e "${RED}[!] FOUND (raw): $full_path${NC}"
+                                echo "[!] FOUND (raw): $full_path" >> "$LOG_FILE"
+                                FOUND_FILES+=("$full_path")
+                            fi
+                        done
+                    fi
                 fi
             done
         fi
