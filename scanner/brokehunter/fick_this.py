@@ -15,35 +15,50 @@ CRITICAL_INSTALL_PATHS = [
     "/usr/local/lib/",
     "/etc/",
     "/dev/shm/",
-    "/tmp/"
+    "/tmp/",
+    "/home"
 ]
 
 def find_artifacts_direct_check(critical_paths, magic_prefix):
     """
-    Performs a direct check (equivalent to trying to 'cd' into a known hidden directory).
+    Performs a direct check recursively for the known hidden artifact name.
     This exploits rootkits that only hook readdir (directory listing) but not open/stat.
     """
     found_artifacts = set()
-    print(f"[INFO] Running direct CD-Bypass check for artifact: '{magic_prefix}'...")
+    print(f"[INFO] Running recursive direct CD-Bypass check for artifact: '{magic_prefix}'...")
 
-    for root_dir in critical_paths:
-        full_path = os.path.join(root_dir, magic_prefix)
-        
+    for start_path in critical_paths:
+        if not os.path.isdir(start_path):
+            continue
+
         try:
-            # Check if the full, known path exists, even if it's hidden from 'ls'
-            if os.path.exists(full_path):
-                # Now check if it's actually hidden (optional but good confirmation)
-                # Note: os.listdir is highly likely hooked, so this check is only for confirmation
-                if not magic_prefix in os.listdir(root_dir):
-                    # We found the file directly, AND it's not visible via normal listing!
-                    found_artifacts.add(f"(DIRECT-HIT) {full_path}")
-                else:
-                    # Found it, but it's not hidden (normal file starting with the prefix)
+            # Use os.walk to iterate through all subdirectories recursively
+            for root, _, _ in os.walk(start_path, topdown=True, followlinks=False):
+                full_path = os.path.join(root, magic_prefix)
+                
+                try:
+                    # 1. Check if the full, known path exists (bypassing readdir hook)
+                    if os.path.exists(full_path):
+                        # 2. Confirmation check: Is the file/dir visible via standard listing (likely hooked)?
+                        # We try os.listdir(root) to see if the rootkit is hiding it.
+                        is_visible = magic_prefix in os.listdir(root)
+                        
+                        if not is_visible:
+                            # Direct access worked AND standard listing failed to show it -> Hidden artifact!
+                            found_artifacts.add(f"(DIRECT-HIT) {full_path}")
+                
+                except PermissionError:
+                    # Ignore permission errors for inner filesystem calls
                     pass
+                except Exception:
+                    # Ignore other errors during inner filesystem calls (e.g., if os.listdir fails on a bad directory)
+                    pass
+
         except PermissionError:
             pass
         except Exception as e:
-            print(f"[ERROR] Direct check error in {full_path}: {e}")
+            # Catch errors from os.walk itself (e.g., permissions on the starting path)
+            print(f"[ERROR] Direct check error walking {start_path}: {e}")
 
     return found_artifacts
 
