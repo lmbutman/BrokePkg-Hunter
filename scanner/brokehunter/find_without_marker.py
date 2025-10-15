@@ -1,14 +1,8 @@
 #!/usr/bin/env python3
 """
-find_hidden_no_marker.py
-Defensive tool: try to discover files/dirs hidden by a kernel rootkit WITHOUT knowing a marker.
-Techniques:
- - collect visible names via `find` (what the running kernel exposes)
- - (optional) gather metadata-driven listings via debugfs for ext filesystems
- - raw block-device scan: extract printable sequences that look like paths (contain '/')
- - report candidates that appear in raw metadata/strings but are NOT visible via find
-
-Usage: sudo ./find_hidden_no_marker.py [--no-raw] [--raw-only] [--minlen 8] [--devices /dev/sda,/dev/sdb]
+find_hidden_no_marker_filtered.py
+Like find_hidden_no_marker.py but filters out self-generated noise (script filename, commands used, temp files).
+Usage: sudo ./find_hidden_no_marker_filtered.py [--no-raw] [--raw-only] [--minlen 8] [--devices /dev/sda,/dev/sdb]
 """
 import os
 import re
@@ -28,7 +22,6 @@ def run_find(min_len):
     try:
         out = subprocess.check_output(cmd, stderr=subprocess.DEVNULL, text=True)
     except subprocess.CalledProcessError:
-        # sometimes find returns nonzero; try streaming instead
         print("  (find returned nonzero; streaming output)")
         p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, text=True)
         out = p.communicate()[0] if p.stdout is not None else ""
@@ -58,10 +51,8 @@ def run_debugfs_on_exts():
             continue
         print(f"  - device {dev} mounted on {mnt} ({fstype})")
         try:
-            # Use debugfs to recursively list directories; its output often reveals names hidden from userspace
             dbg_cmd = ["sudo", "debugfs", "-R", f"ls -p {mnt}", dev]
             out = subprocess.check_output(dbg_cmd, stderr=subprocess.DEVNULL, text=True)
-            # extract printable-looking tokens with slashes
             for line in out.splitlines():
                 s = line.strip()
                 if "/" in s and len(s) > 3:
@@ -83,17 +74,13 @@ def list_block_devices():
         except Exception:
             pass
     if not devs:
-        # fallback: common device patterns (Linux); macOS will need providing device list via --devices
-        for p in ("/dev/sda","/dev/nvme0n1"):
+        for p in ("/dev/sda","/dev/nvme0n1","/dev/rdisk0"):
             if os.path.exists(p):
                 devs.append(p)
-    # filter
     devs=[d for d in devs if os.path.exists(d)]
     return devs
 
 def extract_printable_paths_from_bytes(buf, min_len):
-    # find ASCII printable sequences with slashes
-    # printable = bytes 0x20..0x7e
     printable_re = re.compile(rb"[ -~]{%d,}" % min_len)
     out = set()
     for m in printable_re.finditer(buf):
@@ -102,12 +89,10 @@ def extract_printable_paths_from_bytes(buf, min_len):
         except:
             continue
         if "/" in s:
-            # split by whitespace/newline to get probable path segments
             parts = re.split(r"[\x00-\x1F\s]+", s)
             for p in parts:
                 if "/" in p and len(p) >= min_len:
-                    # Normalize possible trailing punctuation
-                    p = p.strip(" \t\n\r\x00\"'<>|")
+                    p = p.strip(" \t\n\r\x00\"'<>|,;")
                     if len(p) >= min_len and p.count("/")>=1:
                         out.add(p)
     return out
@@ -127,12 +112,10 @@ def raw_scan_devices(devices, min_len):
                     if not chunk:
                         break
                     data = prev + chunk
-                    # extract printable strings containing '/'
                     found = extract_printable_paths_from_bytes(data, min_len)
                     if found:
                         for p in found:
                             candidates.add(p)
-                    # keep overlap
                     prev = data[-OVERLAP:]
                     offset += len(chunk)
         except PermissionError:
@@ -143,19 +126,87 @@ def raw_scan_devices(devices, min_len):
     return candidates
 
 def normalize_candidates(cands):
-    # Try to cleanup common artifacts and collapse duplicates
     out=set()
     for c in cands:
-        #truncate at first null if present
         if "\x00" in c:
             c = c.split("\x00",1)[0]
         c = c.strip()
-        # skip very short or obviously garbage ones
         if len(c) < 4:
             continue
-        # if there's no leading slash, keep as-is (could be relative or part of string)
         out.add(c)
     return out
+
+def build_self_blacklist(script_path):
+    """
+    Build blacklist of tokens that indicate self-noise:
+     - script filename and directory
+     - interpreter binary path (sys.executable)
+     - common commands the script runs (find, debugfs, strings, dd, lsblk, grep)
+     - any temp file patterns we might produce (/tmp/*debugfs*, /tmp/*)
+    """
+    bl = set()
+    # script absolute path and components
+    try:
+        script_abspath = os.path.abspath(script_path)
+        bl.add(script_abspath)
+        for p in script_abspath.split(os.sep):
+            if p:
+                bl.add(p)
+    except Exception:
+        pass
+
+    # python interpreter
+    try:
+        bl.add(sys.executable)
+        bl.update([os.path.basename(sys.executable)])
+    except Exception:
+        pass
+
+    # commands used by script
+    known_cmds = ["find", "debugfs", "strings", "dd", "lsblk", "grep", "sudo", "python", "python3"]
+    for c in known_cmds:
+        bl.add(c)
+        bl.add("/usr/bin/" + c)
+        bl.add("/bin/" + c)
+
+    # tmp patterns (generic)
+    bl.add("/tmp")
+    bl.add("tmp")
+    bl.add("/var/tmp")
+
+    # cwd and its components
+    try:
+        cwd = os.path.abspath(os.getcwd())
+        bl.add(cwd)
+        for p in cwd.split(os.sep):
+            if p:
+                bl.add(p)
+    except Exception:
+        pass
+
+    # also include the current username
+    try:
+        bl.add(os.getlogin())
+    except Exception:
+        pass
+
+    # reduce tokens to those longer than 1 char to avoid over-filtering
+    bl = {t for t in bl if isinstance(t, str) and len(t) > 1}
+    return bl
+
+def is_blacklisted(candidate, blacklist_tokens):
+    """
+    Return True if candidate contains any blacklist token (case-sensitive),
+    or looks obviously like a short command path we don't care about.
+    """
+    # quick rejects
+    for tok in blacklist_tokens:
+        if tok in candidate:
+            return True
+
+    # reject very short filename fragments like '/bin/ls' only if bin/tool in blacklist
+    # otherwise keep
+    return False
 
 def main():
     parser = argparse.ArgumentParser()
@@ -168,14 +219,13 @@ def main():
 
     if os.geteuid() != 0:
         print("Warning: running without root may prevent scanning raw devices. For best results, run as root.")
+
     visible = set()
     raw_candidates = set()
     meta_candidates = set()
 
     if not args.raw_only:
         visible = run_find(min_len)
-
-        # try ext metadata read
         meta_candidates = run_debugfs_on_exts()
 
     if not args.no_raw:
@@ -192,42 +242,48 @@ def main():
         else:
             print("Skipping raw scan (no devices available).")
 
-    # normalize and compare sets
+    # Build blacklist and normalize candidates
+    blacklist = build_self_blacklist(__file__)
     visible_norm = set(p.rstrip("/") for p in visible)
     raw_norm = normalize_candidates(raw_candidates | meta_candidates)
 
-    # find raw candidates that are not visible
+    # Filter out candidates containing any blacklist token
+    filtered_raw = set()
+    for cand in raw_norm:
+        if is_blacklisted(cand, blacklist):
+            continue
+        filtered_raw.add(cand)
+
+    # find candidates likely hidden (present in raw/meta but not in visible)
     hidden = []
-    for cand in sorted(raw_norm):
-        # heuristics: candidate should have at least one absolute-looking path or reasonable length
+    for cand in sorted(filtered_raw):
         if cand.startswith("/"):
             if cand not in visible_norm:
                 hidden.append(cand)
         else:
-            # if candidate contains an absolute-looking segment, try to extract
             segs = [s for s in cand.split("/") if s]
             if len(segs) >= 2:
-                # try to form absolute by prefixing root
-                maybe = "/" + "/".join(segs[-3:])  # last up to 3 segments
+                maybe = "/" + "/".join(segs[-3:])
                 if maybe not in visible_norm:
                     hidden.append(cand)
 
     print("\n=== Summary ===")
     print(f"Visible entries (find): {len(visible_norm)}")
-    print(f"Raw/meta candidate path-like strings: {len(raw_norm)}")
-    print(f"Likely-hidden candidates (raw/meta NOT in visible): {len(hidden)}\n")
+    print(f"Raw/meta candidate path-like strings (before filtering): {len(raw_norm)}")
+    print(f"Raw/meta after self-noise filtering: {len(filtered_raw)}")
+    print(f"Likely-hidden candidates (not visible): {len(hidden)}\n")
 
     if hidden:
         print("Likely hidden items (examples):")
         for i,c in enumerate(hidden[:200], 1):
             print(f" {i:3d}. {c}")
     else:
-        print("No obvious hidden path candidates found. That does not mean nothing is hidden — rootkits can hide names in ways this scan cannot detect.")
-    print("\nRecommendations:")
-    print(" - If you find interesting candidates, **do not** delete or modify them on the infected host.")
-    print(" - Prefer making a full disk image (dd) and analyze on a clean system or live USB.")
-    print(" - If your filesystem is APFS/HFS or other macOS-specific FS, debugfs won't help; raw scanning still can find name strings embedded on disk.")
-    print(" - If you want, supply --devices to target specific block devices (helpful on macOS).")
+        print("No obvious hidden path candidates found (after filtering).")
+
+    print("\nNotes & next steps:")
+    print(" - The blacklist is conservative; it tries to exclude script/tool artefacts. If you see legitimate paths being filtered, we can relax it.")
+    print(" - If you still get many false positives, consider imaging the device and analyzing on a clean system (most reliable).")
+    print(" - You can supply --devices to target a specific block device (helps on macOS).")
 
 if __name__ == "__main__":
     main()
