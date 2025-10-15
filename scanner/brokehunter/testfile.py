@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
-# scan_hidden_brokepkg.py
+# scan_hidden_brokepkg.py (filtered)
 # Defensive tool to locate files/dirs hidden by brokepkg-like rootkits (searches for marker in names).
-# Usage: sudo ./scan_hidden_brokepkg.py [--marker MAGIC_HIDE] [--no-raw] [--raw-only]
-#
-# Written for investigation/defensive use. Run as root.
+# This variant filters out self-generated noise so the script's own commands and temp files don't appear.
+# Usage: sudo ./scan_hidden_brokepkg.py [--marker MAGIC_HIDE] [--no-raw] [--raw-only] [--show-blacklist]
 
 import os
 import re
@@ -17,108 +16,156 @@ CHUNK = 4 * 1024 * 1024  # 4 MiB read window
 OVERLAP = 4096  # overlap so matches straddling chunk edges are found
 PRINT_MIN_LEN = 6  # minimum printable string length to show
 
+def build_self_blacklist(script_path, extra_list=None):
+    bl = set()
+    try:
+        abspath = os.path.abspath(script_path)
+        bl.add(abspath)
+        bl.update(part for part in abspath.split(os.sep) if part)
+    except Exception:
+        pass
+    try:
+        bl.add(sys.executable)
+        bl.add(os.path.basename(sys.executable))
+    except Exception:
+        pass
+    # commands this script may invoke
+    known_cmds = ["find", "debugfs", "strings", "dd", "lsblk", "grep", "sudo", "python", "python3"]
+    for c in known_cmds:
+        bl.add(c)
+        bl.add("/usr/bin/" + c)
+        bl.add("/bin/" + c)
+    # tmp and var tmp
+    bl.add("/tmp")
+    bl.add("tmp")
+    bl.add("/var/tmp")
+    # cwd and components
+    try:
+        cwd = os.path.abspath(os.getcwd())
+        bl.add(cwd)
+        bl.update(part for part in cwd.split(os.sep) if part)
+    except Exception:
+        pass
+    # username
+    try:
+        bl.add(os.getlogin())
+    except Exception:
+        pass
+    # extra user-provided tokens
+    if extra_list:
+        for e in extra_list:
+            if e:
+                bl.add(e)
+    # keep tokens >1 char to avoid over-filtering
+    return {t for t in bl if isinstance(t, str) and len(t) > 1}
+
 def run_find(marker):
     print("\n[1] Userland 'find' (may be fooled by rootkits):")
     try:
-        # search for both files and dirs
-        cmd = ["find", "/", "-xdev", "-name", f"*{marker}*", "-print"]
+        cmd = ["find", "/", "-xdev", "-name", f"*{marker}*", "-print", "-o", "-name", f"*{marker}*", "-type", "d", "-print"]
         print(" Running: " + " ".join(cmd))
         subprocess.run(cmd, check=False)
     except Exception as e:
         print(" find step failed:", e)
 
-def run_debugfs_on_exts(marker):
+def run_debugfs_on_exts(marker, blacklist):
     if which("debugfs") is None:
-        print("\n[2] debugfs not found; skipping ext2/3/4 metadata checks.")
+        print("\n[2] debugfs not found — skipping ext2/3/4 metadata checks.")
         return
-
-    print("\n[2] Attempting debugfs on ext2/3/4 mounts (may bypass readdir hooks):")
-    # Parse /proc/mounts for devices and fstype
+    print("\n[2] Using debugfs on ext mounts to search filesystem metadata (bypasses many readdir hooks).")
+    # Parse mounts
     try:
         with open("/proc/mounts", "r") as f:
-            mounts = [line.split()[:3] for line in f.readlines()]
+            mounts = [line.split()[:3] for line in f]
     except Exception as e:
         print(" Could not read /proc/mounts:", e)
         return
 
-    for dev, mnt, fstype in mounts:
+    for dev, mp, fs in mounts:
         if not dev.startswith("/"):
             continue
-        if fstype not in ("ext2", "ext3", "ext4"):
+        if fs not in ("ext2", "ext3", "ext4"):
             continue
-        print(f"  -> {dev} mounted on {mnt} ({fstype})")
-        dbg_out = f"/tmp/debugfs_list_{os.path.basename(dev)}.txt"
-        # debugfs expects the device file and commands via -R
-        # We'll run 'ls -p' recursively from '/', capture output and grep for marker.
+        print(f"  Checking {dev} mounted on {mp} ({fs})...")
+        inside_path = mp.rstrip("/") or "/"
+        dbg_out = f"/tmp/debugfs_$(basename_{os.path.basename(dev)})_out.txt"
         try:
-            cmd = ["sudo", "debugfs", "-R", f"ls -p {mnt}", dev]
-            print("     running debugfs (this might fail if device busy).")
-            with open(dbg_out, "wb") as out:
-                subprocess.run(cmd, check=False, stdout=out, stderr=subprocess.DEVNULL)
-            # search file for marker
-            with open(dbg_out, "rb") as out:
-                content = out.read()
-            if marker.encode() in content:
-                print(f"     FOUND marker '{marker}' in debugfs output for {dev}:")
-                for i, line in enumerate(content.splitlines()):
-                    if marker.encode() in line:
-                        print("       " + line.decode(errors="replace"))
+            # We'll capture debugfs output and search for marker; filter lines containing blacklist tokens
+            proc = subprocess.Popen(["sudo", "debugfs", "-R", f"ls -p {inside_path}", dev],
+                                    stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
+            stdout, _ = proc.communicate(timeout=60)
+            if not stdout:
+                print("    debugfs returned no output (or timed out).")
+                continue
+            b = stdout
+            if marker.encode() in b:
+                print(f"    FOUND (debugfs):")
+                for line in b.splitlines():
+                    try:
+                        s = line.decode(errors="replace").strip()
+                    except Exception:
+                        s = str(line)
+                    if marker in s:
+                        # filter out if blacklisted
+                        if any(tok in s for tok in blacklist):
+                            continue
+                        print("     " + s)
             else:
-                print(f"     no '{marker}' names found by debugfs on {dev}")
+                print(f"    No names with '{marker}' found by debugfs on {dev}")
+        except subprocess.TimeoutExpired:
+            print("    debugfs timed out for", dev)
         except Exception as e:
-            print("     debugfs step failed for", dev, ":", e)
+            print("    debugfs failed for", dev, ":", e)
+        print()
 
 def list_block_devices():
-    # prefer lsblk if available for nicer names
     devs = []
     if which("lsblk"):
         try:
-            out = subprocess.check_output(["lsblk", "-ndo", "NAME,TYPE"]).decode()
+            out = subprocess.check_output(["lsblk", "-ndo", "NAME,TYPE"], text=True)
             for line in out.splitlines():
-                name, type_ = line.split()
-                if type_ in ("disk", "part"):
-                    devs.append("/dev/" + name)
+                name_type = line.split()
+                if len(name_type) >= 2 and name_type[1] in ("disk", "part"):
+                    devs.append("/dev/" + name_type[0])
         except Exception:
             pass
-    # fallback to /proc/partitions
     if not devs:
-        try:
-            with open("/proc/partitions","r") as f:
-                for l in f:
-                    parts = l.split()
-                    if len(parts) == 4 and parts[3].isdigit() is False:
-                        continue
-                    if len(parts) == 4:
-                        name = parts[3]
-                        devs.append("/dev/" + name)
-        except Exception:
-            pass
-    # filter out non-existent
-    devs = [d for d in devs if os.path.exists(d)]
-    # dedupe
-    seen = set()
+        # fallback attempt
+        candidates = ["/dev/sda", "/dev/nvme0n1", "/dev/rdisk0", "/dev/disk0"]
+        for p in candidates:
+            if os.path.exists(p):
+                devs.append(p)
+    # dedupe & exist
     out = []
     for d in devs:
-        if d not in seen:
-            seen.add(d)
+        if d not in out and os.path.exists(d):
             out.append(d)
     return out
 
-print("Brokepkg-hidden discovery tool (defensive).")
+print("Brokepkg-hidden discovery tool (filtered).")
 parser = argparse.ArgumentParser()
 parser.add_argument("--marker", default=DEFAULT_MARKER, help="Marker string used by rootkit (default MAGIC_HIDE)")
 parser.add_argument("--no-raw", action="store_true", help="Skip raw block device scan")
 parser.add_argument("--raw-only", action="store_true", help="Only perform raw block device scan")
+parser.add_argument("--show-blacklist", action="store_true", help="Show the auto-generated blacklist and exit")
+parser.add_argument("--extra-ignore", help="Comma-separated extra tokens to ignore (e.g. suspicious-temp)")
 args = parser.parse_args()
 marker = args.marker
 
 if os.geteuid() != 0:
     print("Warning: This script should be run as root to access block devices and debugfs.")
-print(f"Searching for marker: '{marker}'")
+extra_tokens = args.extra_ignore.split(",") if args.extra_ignore else None
+blacklist = build_self_blacklist(__file__, extra_tokens)
+
+if args.show_blacklist:
+    print("Auto-generated blacklist tokens (will filter candidates that include any of these):")
+    for t in sorted(blacklist):
+        print(" -", t)
+    sys.exit(0)
 
 if not args.raw_only:
     run_find(marker)
-    run_debugfs_on_exts(marker)
+    run_debugfs_on_exts(marker, blacklist)
 
 if args.no_raw and not args.raw_only:
     print("\nSkipping raw block device scan as requested.")
@@ -132,15 +179,14 @@ if not devs:
     sys.exit(0)
 
 print(" Block devices to scan:", ", ".join(devs))
-# We'll look for marker bytes in each device; for each match extract printable window
-print_re = re.compile(rb"[ -~]{%d,}" % PRINT_MIN_LEN)  # printable ASCII sequences min length
+print_re = re.compile(rb"[ -~]{%d,}" % PRINT_MIN_LEN)
 
 def extract_printables(buf):
     return [m.group(0).decode('ascii', errors='replace') for m in print_re.finditer(buf)]
 
 for dev in devs:
     try:
-        print(f"\nScanning {dev} ... (this may take a while; reading in {CHUNK} byte chunks)")
+        print(f"\nScanning {dev} ... (reading in {CHUNK} byte chunks)")
         with open(dev, "rb", buffering=0) as f:
             offset = 0
             prev = b""
@@ -151,30 +197,32 @@ for dev in devs:
                 data = prev + chunk
                 idx = data.find(marker.encode())
                 while idx != -1:
-                    # compute real offset on device
                     real_off = offset - len(prev) + idx
-                    # window around the match
                     start = max(0, idx - 512)
                     end = min(len(data), idx + len(marker) + 512)
                     window = data[start:end]
-                    print(f"  [HIT] device={dev} offset={real_off} (0x{real_off:x})")
-                    # find and print nearby printable strings (likely names or paths)
+                    # extract printable candidates in the window
                     strs = extract_printables(window)
-                    if strs:
+                    # filter printable sequences by blacklist tokens
+                    filtered = []
+                    for s in strs:
+                        # skip very short
+                        if len(s) < PRINT_MIN_LEN:
+                            continue
+                        # if any blacklist token present, skip this printable
+                        if any(tok in s for tok in blacklist):
+                            continue
+                        filtered.append(s)
+                    if filtered:
+                        print(f"  [HIT] device={dev} offset={real_off} (0x{real_off:x})")
                         print("    nearby printable sequences (candidates):")
-                        for s in strs:
-                            if marker in s:
-                                # mark the exact sequence containing the marker
-                                print("      * " + s)
-                            else:
-                                # show sequences that include slashes (likely paths)
-                                if "/" in s:
-                                    print("        " + s)
+                        for s in filtered:
+                            print("      * " + s)
                     else:
-                        print("    no printable sequences found nearby.")
-                    # search for next occurrence in this data buffer
+                        # If everything was blacklisted, don't print the hit to avoid self-noise
+                        # but you might want to log quiet hits — omitted here for clarity
+                        pass
                     idx = data.find(marker.encode(), idx + 1)
-                # prepare for next read: keep overlap bytes from end
                 prev = data[-OVERLAP:]
                 offset += len(chunk)
     except PermissionError:
@@ -182,7 +230,6 @@ for dev in devs:
     except Exception as e:
         print(" Error scanning", dev, ":", e)
 
-print("\nScan completed.")
-print("Notes:")
-print(" - If you see candidate paths above, record device and offset; consider imaging the device for offline analysis.")
-print(" - If nothing shows up but you still know something is hidden, only forensic imaging and analysis on a clean system is reliable.")
+print("\nScan finished. If you found hits, record the device and path and consider further incident response.")
+print(" - Do not delete files prematurely. Prefer collecting a forensic copy (dd) and work offline.")
+print("Cleanup: none (no temp files created by this run).")
