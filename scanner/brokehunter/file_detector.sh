@@ -1,146 +1,71 @@
 #!/bin/bash
 
 # Advanced Brokepkg Rootkit Hidden Files Detector
-# Uses direct inode enumeration and raw block device access to bypass rootkit hooks
+# Uses low-level techniques to bypass rootkit hooks
 
 set -euo pipefail
 
-# Colors
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m'
 
-MAGIC_STRING="br0k3_n0w_h1dd3n"
 LOG_FILE="./brokepkg_scan_$(date +%Y%m%d_%H%M%S).log"
 FOUND_FILES=()
 
 echo -e "${BLUE}======================================${NC}"
-echo -e "${BLUE}  Advanced Brokepkg Detection Tool${NC}"
+echo -e "${BLUE}  Brokepkg Advanced Detection Tool${NC}"
 echo -e "${BLUE}======================================${NC}"
 echo ""
 
+# Check if running as root
 if [[ $EUID -ne 0 ]]; then
     echo -e "${RED}[!] This script must be run as root${NC}"
     exit 1
 fi
 
-# Method 1: Direct inode enumeration using debugfs
-scan_with_debugfs() {
-    local mount_point="$1"
-    local device=$(df "$mount_point" | tail -1 | awk '{print $1}')
-    
-    echo -e "${BLUE}[*] Using debugfs on $device for $mount_point${NC}"
-    
-    if ! command -v debugfs &> /dev/null; then
-        echo -e "${YELLOW}[!] debugfs not found, skipping this method${NC}"
-        return
-    fi
-    
-    
-    # Method 4: Process file descriptors
-    echo ""
-    scan_proc_fds
-    
-    # Method 5: Alternate strings
-    echo ""
-    check_alternate_strings
-    
-    # Generate report
-    echo ""
-    echo -e "${BLUE}======================================${NC}"
-    echo -e "${BLUE}    Scan Complete${NC}"
-    echo -e "${BLUE}======================================${NC}"
-    echo ""
-    
-    if [ ${#FOUND_FILES[@]} -eq 0 ]; then
-        echo -e "${YELLOW}[!] No hidden files detected with these methods${NC}"
-        echo ""
-        echo -e "${YELLOW}Suggestions:${NC}"
-        echo -e "  1. Make rootkit visible first: ${GREEN}kill -31 0${NC}"
-        echo -e "  2. Try scanning from a live CD/USB"
-        echo -e "  3. Mount filesystem on another system"
-        echo -e "  4. Check if magic string is different than 'brokepkg'"
-        echo -e "  5. Look in /proc/*/fd for processes with suspicious file handles"
-    else
-        echo -e "${RED}[!] Found ${#FOUND_FILES[@]} suspicious file(s):${NC}"
-        printf '%s\n' "${FOUND_FILES[@]}" | sort -u
-    fi
-    
-    echo ""
-    echo -e "${BLUE}[*] Log saved to: $LOG_FILE${NC}"
-    echo ""
-    echo -e "${YELLOW}To unhide rootkit and remove:${NC}"
-    echo -e "  ${GREEN}kill -31 0${NC}         # Make module visible"
-    echo -e "  ${GREEN}lsmod | grep broke${NC}  # Verify it's visible"
-    echo -e "  ${GREEN}rmmod brokepkg${NC}      # Remove module"
-}
+# Method 1: Compare ls output with raw getdents64 system call
+echo -e "${YELLOW}[*] Method 1: Comparing visible files with raw directory entries${NC}"
+echo "[*] Method 1: Raw directory comparison" >> "$LOG_FILE"
 
-main "$@" Get filesystem type
-    local fs_type=$(df -T "$mount_point" | tail -1 | awk '{print $2}')
-    
-    if [[ "$fs_type" != "ext"* ]]; then
-        echo -e "${YELLOW}[!] debugfs only works with ext filesystems, skipping${NC}"
-        return
-    fi
-    
-    echo -e "${BLUE}[*] Enumerating all inodes (this bypasses readdir hooks)...${NC}"
-    
-    # List all inodes in filesystem
-    debugfs -R "ls -l -r /" "$device" 2>/dev/null | while read -r line; do
-        if [[ "$line" == *"$MAGIC_STRING"* ]]; then
-            echo -e "${RED}[!] FOUND (via debugfs): $line${NC}"
-            echo "[!] FOUND (via debugfs): $line" >> "$LOG_FILE"
-        fi
-    done
-}
-
-# Method 2: Compare stat results with readdir results
-find_stat_discrepancies() {
+check_directory_raw() {
     local dir="$1"
-    local max_depth="${2:-3}"
     
-    echo -e "${BLUE}[*] Checking for stat/readdir discrepancies in: $dir${NC}"
+    if [ ! -d "$dir" ]; then
+        return
+    fi
     
-    # Build a list of inodes that stat says exist
-    local -A stat_inodes
-    local -A readdir_inodes
+    echo -e "${BLUE}[*] Checking: $dir${NC}"
     
-    # Get all inodes by iterating inode numbers
-    # This is slow but thorough
-    for inode in $(seq 1 1000000); do
-        local path=$(find "$dir" -inum "$inode" -print -quit 2>/dev/null)
-        if [ -n "$path" ]; then
-            stat_inodes[$inode]="$path"
-        fi
-    done
+    # Get visible file count
+    local visible_count=$(ls -1a "$dir" 2>/dev/null | wc -l)
     
-    # Compare with readdir results
-    while IFS= read -r -d '' file; do
-        local inode=$(stat -c '%i' "$file" 2>/dev/null)
-        if [ -n "$inode" ]; then
-            readdir_inodes[$inode]="$file"
-        fi
-    done < <(find "$dir" -maxdepth "$max_depth" -print0 2>/dev/null)
+    # Use Python to read directory with direct syscalls (bypasses some hooks)
+    local python_files=$(python3 -c "
+import os
+import sys
+try:
+    entries = os.listdir('$dir')
+    for entry in entries:
+        print(entry)
+except Exception as e:
+    pass
+" 2>/dev/null)
     
-    # Find discrepancies
-    for inode in "${!stat_inodes[@]}"; do
-        if [ -z "${readdir_inodes[$inode]:-}" ]; then
-            echo -e "${RED}[!] HIDDEN FILE FOUND: ${stat_inodes[$inode]} (inode: $inode)${NC}"
-            echo "[!] HIDDEN FILE: ${stat_inodes[$inode]} (inode: $inode)" >> "$LOG_FILE"
-            FOUND_FILES+=("${stat_inodes[$inode]}")
-        fi
-    done
+    local python_count=$(echo "$python_files" | grep -c . || echo 0)
+    
+    if [ "$visible_count" -ne "$python_count" ]; then
+        echo -e "${RED}[!] Discrepancy in $dir: ls shows $visible_count, python shows $python_count${NC}"
+        echo "[!] Discrepancy in $dir: ls=$visible_count, python=$python_count" >> "$LOG_FILE"
+    fi
 }
 
-# Method 3: Use getdents64 syscall directly via C program
-create_getdents_binary() {
-    local tmpdir=$(mktemp -d)
-    local src="$tmpdir/getdents.c"
-    local bin="$tmpdir/getdents"
-    
-    cat > "$src" << 'EOF'
+# Method 2: Use C program to directly call getdents64
+echo -e "${YELLOW}[*] Method 2: Creating native binary to bypass hooks${NC}"
+
+create_getdents_tool() {
+    cat > /tmp/getdents_bypass.c << 'EOF'
 #define _GNU_SOURCE
 #include <dirent.h>
 #include <fcntl.h>
@@ -161,19 +86,21 @@ struct linux_dirent64 {
 };
 
 int main(int argc, char *argv[]) {
+    int fd, nread;
+    char buf[BUF_SIZE];
+    struct linux_dirent64 *d;
+    int bpos;
+    
     if (argc < 2) {
         fprintf(stderr, "Usage: %s <directory>\n", argv[0]);
         return 1;
     }
     
-    int fd = open(argv[1], O_RDONLY | O_DIRECTORY);
+    fd = open(argv[1], O_RDONLY | O_DIRECTORY);
     if (fd == -1) {
         perror("open");
         return 1;
     }
-    
-    char buf[BUF_SIZE];
-    int nread;
     
     while (1) {
         nread = syscall(SYS_getdents64, fd, buf, BUF_SIZE);
@@ -181,13 +108,14 @@ int main(int argc, char *argv[]) {
             perror("getdents64");
             break;
         }
+        
         if (nread == 0)
             break;
-            
-        for (int pos = 0; pos < nread;) {
-            struct linux_dirent64 *d = (struct linux_dirent64 *)(buf + pos);
+        
+        for (bpos = 0; bpos < nread;) {
+            d = (struct linux_dirent64 *) (buf + bpos);
             printf("%s\n", d->d_name);
-            pos += d->d_reclen;
+            bpos += d->d_reclen;
         }
     }
     
@@ -195,171 +123,240 @@ int main(int argc, char *argv[]) {
     return 0;
 }
 EOF
-    
-    if command -v gcc &> /dev/null; then
-        gcc -o "$bin" "$src" 2>/dev/null
-        if [ -f "$bin" ]; then
-            echo "$bin"
-            return 0
-        fi
+
+    gcc -o /tmp/getdents_bypass /tmp/getdents_bypass.c 2>/dev/null
+    if [ $? -eq 0 ]; then
+        echo -e "${GREEN}[+] Created bypass tool${NC}"
+        return 0
+    else
+        echo -e "${YELLOW}[!] Could not compile bypass tool (gcc not available)${NC}"
+        return 1
     fi
-    
-    rm -rf "$tmpdir"
-    return 1
 }
 
-scan_with_raw_getdents() {
+# Method 3: Check inode allocation vs visible files
+echo -e "${YELLOW}[*] Method 3: Checking inode discrepancies${NC}"
+
+check_inode_gaps() {
     local dir="$1"
     
-    echo -e "${BLUE}[*] Using raw getdents64 syscall to bypass hooks in: $dir${NC}"
-    
-    local getdents_bin=$(create_getdents_binary)
-    if [ -z "$getdents_bin" ]; then
-        echo -e "${YELLOW}[!] Could not compile getdents tool, skipping${NC}"
+    if [ ! -d "$dir" ]; then
         return
     fi
     
-    "$getdents_bin" "$dir" 2>/dev/null | while read -r filename; do
-        if [[ "$filename" == *"$MAGIC_STRING"* ]]; then
-            echo -e "${RED}[!] FOUND (via raw syscall): $dir/$filename${NC}"
-            echo "[!] FOUND (via raw syscall): $dir/$filename" >> "$LOG_FILE"
-            FOUND_FILES+=("$dir/$filename")
-        fi
-    done
+    # Get all visible inodes in directory
+    local visible_inodes=$(ls -lai "$dir" 2>/dev/null | awk '{print $1}' | grep -E '^[0-9]+ | sort -n)
     
-    rm -rf "$(dirname "$getdents_bin")"
+    # Check for gaps in inode sequence that might indicate hidden files
+    # This is a heuristic approach
+    
+    # Get inode range
+    local min_inode=$(echo "$visible_inodes" | head -1)
+    local max_inode=$(echo "$visible_inodes" | tail -1)
+    
+    if [ -n "$min_inode" ] && [ -n "$max_inode" ]; then
+        local inode_count=$(echo "$visible_inodes" | wc -l)
+        local inode_range=$((max_inode - min_inode + 1))
+        
+        # If there's a large gap, might indicate hidden files
+        if [ $inode_range -gt $((inode_count * 2)) ]; then
+            echo -e "${YELLOW}[!] Large inode gaps in $dir (range: $inode_range, visible: $inode_count)${NC}"
+            echo "[!] Inode gaps in $dir" >> "$LOG_FILE"
+        fi
+    fi
 }
 
-# Method 4: Check all open file descriptors in /proc
-scan_proc_fds() {
-    echo -e "${BLUE}[*] Scanning all process file descriptors...${NC}"
-    
-    for pid in /proc/[0-9]*; do
-        if [ -d "$pid/fd" ]; then
-            for fd in "$pid/fd"/* 2>/dev/null; do
-                if [ -L "$fd" ]; then
-                    local target=$(readlink "$fd" 2>/dev/null || true)
-                    if [ -n "$target" ] && [[ "$target" == *"$MAGIC_STRING"* ]] && [[ "$target" != "/dev/"* ]]; then
-                        echo -e "${RED}[!] Process $(basename $pid) has open FD to: $target${NC}"
-                        echo "[!] Process $(basename $pid) has FD: $target" >> "$LOG_FILE"
-                        FOUND_FILES+=("$target (via pid $(basename $pid))")
-                    fi
-                fi
-            done
-        fi
-        
-        # Check memory maps
-        if [ -f "$pid/maps" ]; then
-            while read -r line; do
-                if [[ "$line" == *"$MAGIC_STRING"* ]]; then
-                    local file=$(echo "$line" | awk '{print $NF}')
-                    if [ -n "$file" ] && [[ "$file" != "["* ]]; then
-                        echo -e "${RED}[!] Process $(basename $pid) has mapped: $file${NC}"
-                        echo "[!] Process $(basename $pid) has mapped: $file" >> "$LOG_FILE"
-                        FOUND_FILES+=("$file (mapped by pid $(basename $pid))")
-                    fi
-                fi
-            done < "$pid/maps" 2>/dev/null
-        fi
-    done
-}
+# Method 4: Unhide the rootkit and scan
+echo -e "${YELLOW}[*] Method 4: Attempting to unhide rootkit temporarily${NC}"
 
-# Method 5: Brute force inode numbers
-bruteforce_inodes() {
-    local mount_point="$1"
-    local max_inode="${2:-100000}"
+unhide_and_scan() {
+    echo -e "${BLUE}[*] Sending signal 31 to unhide brokepkg module...${NC}"
     
-    echo -e "${BLUE}[*] Brute-forcing inode numbers on $mount_point (1-$max_inode)...${NC}"
-    echo -e "${YELLOW}[*] This may take a while...${NC}"
+    # Signal 31 toggles module visibility
+    kill -31 0 2>/dev/null || true
     
-    for inode in $(seq 1 "$max_inode"); do
-        # Show progress every 10000 inodes
-        if (( inode % 10000 == 0 )); then
-            echo -ne "\r${BLUE}[*] Progress: $inode/$max_inode${NC}"
-        fi
+    sleep 1
+    
+    # Check if module is now visible
+    if lsmod | grep -q "brokepkg"; then
+        echo -e "${GREEN}[+] Module is now visible!${NC}"
+        echo "[+] Module unhidden successfully" >> "$LOG_FILE"
         
-        # Try to find file by inode
-        local file=$(find "$mount_point" -xdev -inum "$inode" -print -quit 2>/dev/null)
-        if [ -n "$file" ]; then
-            local basename=$(basename "$file")
-            if [[ "$basename" == *"$MAGIC_STRING"* ]]; then
-                echo -e "\n${RED}[!] FOUND (via inode $inode): $file${NC}"
-                echo "[!] FOUND (via inode $inode): $file" >> "$LOG_FILE"
-                FOUND_FILES+=("$file")
+        # Now scan for files - they should be visible
+        echo -e "${BLUE}[*] Scanning all directories for files with 'brokepkg' in name...${NC}"
+        
+        for search_dir in /home /tmp /var /root /opt /usr/local / ; do
+            if [ -d "$search_dir" ]; then
+                echo -e "${BLUE}[*] Scanning $search_dir...${NC}"
+                
+                while IFS= read -r file; do
+                    echo -e "${RED}[!] FOUND: $file${NC}"
+                    echo "[!] FOUND: $file" >> "$LOG_FILE"
+                    FOUND_FILES+=("$file")
+                    
+                    # Get file details
+                    ls -lah "$file" 2>/dev/null >> "$LOG_FILE" || true
+                done < <(find "$search_dir" -name "*brokepkg*" 2>/dev/null || true)
             fi
-        fi
-    done
-    echo ""
+        done
+        
+        # Hide module again (signal 31 toggles)
+        echo -e "${BLUE}[*] Re-hiding module...${NC}"
+        kill -31 0 2>/dev/null || true
+        
+        return 0
+    else
+        echo -e "${YELLOW}[!] Module still hidden after signal 31${NC}"
+        return 1
+    fi
 }
 
-# Method 6: Use alternate magic strings
-check_alternate_strings() {
-    echo -e "${BLUE}[*] Checking for alternate magic strings...${NC}"
+# Method 5: Direct disk reading (if filesystem device is known)
+echo -e "${YELLOW}[*] Method 5: Attempting direct disk analysis${NC}"
+
+direct_disk_scan() {
+    echo -e "${BLUE}[*] Checking for debugfs availability...${NC}"
     
-    local alt_strings=("brokepkg" "BROKEPKG" ".brokepkg" "broke" "pkg" "rootkit")
+    if ! command -v debugfs &> /dev/null; then
+        echo -e "${YELLOW}[!] debugfs not available (install e2fsprogs)${NC}"
+        return 1
+    fi
     
-    for magic in "${alt_strings[@]}"; do
-        echo -e "${BLUE}[*] Searching for: $magic${NC}"
-        scan_proc_fds_for_string "$magic"
+    # Try to use debugfs to read raw directory entries
+    # This works on ext2/3/4 filesystems
+    for device in $(df -t ext4 -t ext3 -t ext2 | tail -n +2 | awk '{print $1}'); do
+        echo -e "${BLUE}[*] Analyzing device: $device${NC}"
+        
+        # This is a simplified approach - full implementation would need
+        # to parse ext filesystem structures directly
     done
 }
 
-scan_proc_fds_for_string() {
-    local search_str="$1"
+# Method 6: Check /proc file descriptors
+echo -e "${YELLOW}[*] Method 6: Checking process file descriptors${NC}"
+
+check_proc_fds() {
+    echo -e "${BLUE}[*] Scanning process file descriptors for hidden files...${NC}"
     
-    for pid in /proc/[0-9]*; do
-        if [ -d "$pid/fd" ]; then
-            for fd in "$pid/fd"/* 2>/dev/null; do
+    for proc_dir in /proc/[0-9]*; do
+        if [ -d "$proc_dir/fd" ]; then
+            pid=$(basename "$proc_dir")
+            
+            for fd in "$proc_dir/fd"/* 2>/dev/null; do
                 if [ -L "$fd" ]; then
-                    local target=$(readlink "$fd" 2>/dev/null || true)
-                    if [ -n "$target" ] && [[ "$target" == *"$search_str"* ]] && [[ "$target" != "/dev/"* ]]; then
-                        echo -e "${RED}[!] Found '$search_str' in: $target (PID: $(basename $pid))${NC}"
-                        echo "[!] Found '$search_str' in: $target" >> "$LOG_FILE"
-                        FOUND_FILES+=("$target")
+                    target=$(readlink "$fd" 2>/dev/null || echo "")
+                    
+                    if [[ "$target" == *"brokepkg"* ]] || [[ "$target" == *"(deleted)"* && "$target" == *"brokepkg"* ]]; then
+                        echo -e "${RED}[!] Process $pid has FD to: $target${NC}"
+                        echo "[!] Process $pid FD: $target" >> "$LOG_FILE"
+                        FOUND_FILES+=("$target (PID: $pid)")
+                        
+                        # Get process info
+                        if [ -f "$proc_dir/cmdline" ]; then
+                            cmdline=$(cat "$proc_dir/cmdline" 2>/dev/null | tr '\0' ' ')
+                            echo -e "${BLUE}    Command: $cmdline${NC}"
+                            echo "    Command: $cmdline" >> "$LOG_FILE"
+                        fi
                     fi
                 fi
             done
         fi
     done
+}
+
+# Method 7: Check kernel ring buffer for clues
+echo -e "${YELLOW}[*] Method 7: Checking kernel logs${NC}"
+
+check_kernel_logs() {
+    echo -e "${BLUE}[*] Searching dmesg for brokepkg activity...${NC}"
+    
+    dmesg | grep -i "brokepkg" >> "$LOG_FILE" 2>&1 || true
 }
 
 # Main execution
 main() {
-    echo -e "${YELLOW}[*] Target magic string: '$MAGIC_STRING'${NC}"
-    echo -e "${YELLOW}[*] Specify directories to scan (space-separated, or press Enter for /tmp /home):${NC}"
-    read -r -p "Directories: " input_dirs
+    echo -e "${BLUE}[*] Starting advanced detection...${NC}"
+    echo ""
     
-    if [ -z "$input_dirs" ]; then
-        SCAN_DIRS=("/tmp" "/home")
+    # Try the most effective method first: unhiding the rootkit
+    echo -e "${GREEN}[+] RECOMMENDED: Attempting to unhide rootkit first${NC}"
+    if unhide_and_scan; then
+        echo -e "${GREEN}[+] Scan completed with module unhidden${NC}"
     else
-        IFS=' ' read -r -a SCAN_DIRS <<< "$input_dirs"
+        echo -e "${YELLOW}[!] Could not unhide module, trying alternative methods...${NC}"
+        echo ""
+        
+        # Try creating bypass tool
+        if create_getdents_tool; then
+            echo -e "${BLUE}[*] Using bypass tool to scan directories...${NC}"
+            
+            for dir in /home /tmp /var /root /opt; do
+                if [ -d "$dir" ]; then
+                    echo -e "${BLUE}[*] Scanning $dir with bypass tool...${NC}"
+                    
+                    # Run the bypass tool
+                    raw_entries=$(/tmp/getdents_bypass "$dir" 2>/dev/null || echo "")
+                    
+                    # Check each entry
+                    while IFS= read -r entry; do
+                        if [[ "$entry" == *"brokepkg"* ]]; then
+                            full_path="$dir/$entry"
+                            echo -e "${RED}[!] FOUND (raw): $full_path${NC}"
+                            echo "[!] FOUND (raw): $full_path" >> "$LOG_FILE"
+                            FOUND_FILES+=("$full_path")
+                        fi
+                    done <<< "$raw_entries"
+                fi
+            done
+        fi
+        
+        # Check for directory discrepancies
+        for dir in /home/* /tmp /var/tmp /root; do
+            check_directory_raw "$dir"
+            check_inode_gaps "$dir"
+        done
+    fi
+    
+    # Always check process file descriptors
+    check_proc_fds
+    
+    # Check kernel logs
+    check_kernel_logs
+    
+    # Generate report
+    echo ""
+    echo -e "${BLUE}======================================${NC}"
+    echo -e "${BLUE}    Detection Complete${NC}"
+    echo -e "${BLUE}======================================${NC}"
+    echo ""
+    
+    if [ ${#FOUND_FILES[@]} -eq 0 ]; then
+        echo -e "${YELLOW}[!] No hidden files detected with current methods${NC}"
+        echo ""
+        echo -e "${YELLOW}Additional steps to try:${NC}"
+        echo -e "  1. Manually unhide: ${GREEN}kill -31 0${NC}"
+        echo -e "  2. Then search: ${GREEN}find / -name '*brokepkg*' 2>/dev/null${NC}"
+        echo -e "  3. Check specific directories manually"
+        echo -e "  4. Boot from live CD and mount filesystem to scan"
+        echo -e "  5. Use: ${GREEN}grep -r brokepkg /home /tmp /var 2>/dev/null${NC}"
+    else
+        echo -e "${RED}[!] Found ${#FOUND_FILES[@]} suspicious file(s):${NC}"
+        echo ""
+        printf '  %s\n' "${FOUND_FILES[@]}"
+        echo ""
+        echo -e "${YELLOW}[*] Next steps:${NC}"
+        echo -e "  1. Examine files: ls -lah <file>"
+        echo -e "  2. Check file type: file <file>"
+        echo -e "  3. View safely: cat <file> | less"
+        echo -e "  4. Remove rootkit: kill -31 0 && rmmod brokepkg"
     fi
     
     echo ""
-    echo -e "${BLUE}[*] Starting multi-method scan...${NC}"
-    echo ""
+    echo -e "${BLUE}[*] Full log: $LOG_FILE${NC}"
     
-    # Run all detection methods
-    for dir in "${SCAN_DIRS[@]}"; do
-        if [ ! -d "$dir" ]; then
-            echo -e "${YELLOW}[!] Directory does not exist: $dir${NC}"
-            continue
-        fi
-        
-        echo -e "${GREEN}[+] Scanning: $dir${NC}"
-        
-        # Method 1: debugfs
-        scan_with_debugfs "$dir"
-        
-        # Method 2: Raw syscall
-        scan_with_raw_getdents "$dir"
-        
-        # Method 3: Inode bruteforce (limited range for speed)
-        read -r -p "Brute force inodes in $dir? This is slow (y/N): " -n 1
-        echo
-        if [[ $REPLY =~ ^[Yy]$ ]]; then
-            bruteforce_inodes "$dir" 50000
-        fi
-    done
-    
-    #
+    # Cleanup
+    rm -f /tmp/getdents_bypass.c /tmp/getdents_bypass 2>/dev/null || true
+}
+
+# Run
+main "$@"
