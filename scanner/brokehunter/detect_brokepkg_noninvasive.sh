@@ -86,6 +86,80 @@ if [ -r /proc/kallsyms ]; then
 else
   echo "/proc/kallsyms not readable" >> "$OUTDIR/kallsyms_scan.txt"
 fi
+echo "Running source-driven signature checks..." > "$OUTDIR/source_signatures.txt"
+
+# Exact strings from the source (include the exact typo)
+sig_strings=(
+  "brokepkg now is runing"
+  "R3tr074"
+  "Rootkit"
+  "give_root"
+  "module_hide"
+  "CONTAIN_HIDE_SEQUENCE"
+  "NEED_HIDE_PROC"
+  "switch_module_hide"
+  "switch_pid_hide"
+  "switch_port_hide"
+  "port_is_hidden"
+  "fh_install_hooks"
+  "fh_remove_hooks"
+  "hook_getdents"
+  "hook_getdents64"
+  "hook_kill"
+  "hook_tcp4_seq_show"
+  "hook_tcp6_seq_show"
+  "hook_ip_rcv"
+  "SIGHIDE"
+  "SIGMODINVIS"
+  "SIGROOT"
+  "SIGPORT"
+)
+
+# 1) Search /proc/kallsyms for hook/symbol names (high-confidence)
+if [ -r /proc/kallsyms ]; then
+  for s in "${sig_strings[@]}"; do
+    grep -i -E "$s" /proc/kallsyms 2>/dev/null && echo "kallsyms: $s" >> "$OUTDIR/source_signatures.txt" || true
+  done
+else
+  echo "/proc/kallsyms not readable; skipping symbol checks" >> "$OUTDIR/source_signatures.txt"
+fi
+
+# 2) Search the filesystem for exact function names/strings (fast scan on likely paths)
+search_dirs=(/lib/modules /usr/lib/modules /opt /usr/local/lib /root /usr/src /usr /home /var)
+for s in "${sig_strings[@]}"; do
+  # use rg if available (faster), fallback to grep+find
+  if command -v rg >/dev/null 2>&1; then
+    rg -n --hidden --no-messages -I -S -e "$s" "${search_dirs[@]}" --max-filesize 10M 2>/dev/null | head -n 200 >> "$OUTDIR/source_signatures.txt" || true
+  else
+    for d in "${search_dirs[@]}"; do
+      [ -d "$d" ] || continue
+      find "$d" -maxdepth 6 -type f -print0 2>/dev/null \
+        | xargs -0 grep -I -n -E "$s" 2>/dev/null \
+        | head -n 200 >> "$OUTDIR/source_signatures.txt" || true
+    done
+  fi
+done
+
+# 3) Strings in .ko files: run 'strings' on any .ko in /lib/modules and grep
+echo "Scanning module binaries for suspicious strings..." >> "$OUTDIR/source_signatures.txt"
+find /lib/modules -type f -name '*.ko' 2>/dev/null | while read -r ko; do
+  # only run strings if file isn't huge; guard to avoid slowness
+  strings "$ko" 2>/dev/null | rg -n -I -e "brokepkg|hook_getdents|CONTAIN_HIDE_SEQUENCE|NEED_HIDE_PROC|give_root|SIGHIDE|SIGROOT|fh_install_hooks|fh_remove_hooks" -n --no-messages 2>/dev/null \
+    && echo "sus_strings_in: $ko" >> "$OUTDIR/source_signatures.txt" || true
+done
+
+# 4) Heuristic: check if syscall symbols (sys_getdents/sys_getdents64) appear along with hook symbols
+grep -i -E "sys_getdents64|sys_getdents" /proc/kallsyms 2>/dev/null > "$OUTDIR/syscall_symbols.txt" || true
+grep -i -E "hook_getdents|hook_getdents64" /proc/kallsyms 2>/dev/null >> "$OUTDIR/syscall_symbols.txt" || true
+
+# 5) Add findings to the main search log so verdict logic picks them up
+if grep -qi -E "brokepkg|hook_getdents|hook_getdents64|fh_install_hooks|fh_remove_hooks|give_root|CONTAIN_HIDE_SEQUENCE|NEED_HIDE_PROC" "$OUTDIR/source_signatures.txt" 2>/dev/null; then
+  echo "source_signatures_found" >> "$OUTDIR/search_paths_log.txt"
+fi
+
+# Summarize what we found
+echo "----- source-driven findings -----" >> "$OUTDIR/summary_debug.txt"
+tail -n 200 "$OUTDIR/source_signatures.txt" >> "$OUTDIR/summary_debug.txt" 2>/dev/null || true
 
 echo "Looking for deleted .ko references..." > "$OUTDIR/deleted_refs.txt"
 for fd in /proc/*/fd/*; do
