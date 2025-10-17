@@ -17,7 +17,7 @@ find "$TARGET_DIR" $EXCLUDE_FIND -type d -maxdepth "$MAX_DEPTH" 2>/dev/null | wh
     STAT_LINKS=$(stat -c "%h" "$DIR_PATH" 2>/dev/null)
     if [ -z "$STAT_LINKS" ]; then continue; fi
 
-    VISIBLE_SUBDIRS=$(ls -d */ "$DIR_PATH" 2>/dev/null | wc -l)
+    VISIBLE_SUBDIRS=$(ls -AFL "$DIR_PATH" 2>/dev/null | grep -c '/')
     EXPECTED_LINKS=$((VISIBLE_SUBDIRS + 2))
 
     if [ "$STAT_LINKS" -gt "$EXPECTED_LINKS" ]; then
