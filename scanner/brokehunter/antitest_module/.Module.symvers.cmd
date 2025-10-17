@@ -1,0 +1,1 @@
+cmd_/home/kali/dasak/BrokePkg-Hunter/scanner/brokehunter/antitest_module/Module.symvers := sed 's/ko$$/o/' /home/kali/dasak/BrokePkg-Hunter/scanner/brokehunter/antitest_module/modules.order | scripts/mod/modpost -m    -o /home/kali/dasak/BrokePkg-Hunter/scanner/brokehunter/antitest_module/Module.symvers -e -i Module.symvers   -T -

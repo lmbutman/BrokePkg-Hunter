@@ -1,0 +1,32 @@
+Excluding: /home/kali/dasak/BrokePkg-Hunter/scripts
+STEP 1: Simple hint checks
+[1.1] /sys/module/brokepkg: PRESENT
+[1.2] dmesg: no brokepkg hits
+[1.3] lsmod: brokepkg not listed
+STEP 3: Attempting brute-force unhide (signals 34..64 then 1..31) using disposable child
+Spawned disposable child PID=1685
+Module became VISIBLE after sending signal 31 to child
+Unhide brute-force finished. found_signal: 31
+rmmod failed — see scan_full_20251017-221006/rmmod_err.txt and dmesg
+STEP 5: Searching for brokepkg.ko across common roots
+No brokepkg .ko files found in the fast search
+Attempting global search for MAGIC_HIDE macro in config.h files (may be slow)
+No MAGIC_HIDE value discovered; skipping folder-name search
+STEP 7: Listing open ports and owning processes
+Open ports saved to scan_full_20251017-221006/open_ports.txt
+STEP 8: Startup / autostart checks
+/etc/ld.so.preload absent
+Startup checks completed (see scan_full_20251017-221006/* for raw outputs)
+STEP 9: Cron and at jobs
+ADDITIONAL: checking SUID files, SSH keys, iptables/nft, package-integrity hints
+STEP 10: Collating results
+timestamp: 20251017-221006
+verdict: installed_in_memory_possibly_hidden
+evidence: present_in_memory unhide_signal_found:31 open_ports_listed
+repo: none
+found_kos:
+  none
+magic_hide: none
+magic_dirs:
+  none
+rmmod_result: rmmod_failed

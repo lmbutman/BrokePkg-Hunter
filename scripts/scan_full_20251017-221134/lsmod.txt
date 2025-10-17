@@ -1,0 +1,83 @@
+Module                  Size  Used by
+nf_tables             245760  0
+libcrc32c              16384  1 nf_tables
+nfnetlink              16384  1 nf_tables
+tcp_diag               16384  0
+udp_diag               16384  0
+inet_diag              24576  2 tcp_diag,udp_diag
+rfkill                 28672  2
+vsock_loopback         16384  0
+vmw_vsock_virtio_transport_common    40960  1 vsock_loopback
+vmw_vsock_vmci_transport    32768  2
+vsock                  49152  7 vmw_vsock_virtio_transport_common,vsock_loopback,vmw_vsock_vmci_transport
+snd_ens1371            32768  2
+snd_ac97_codec        180224  1 snd_ens1371
+ac97_bus               16384  1 snd_ac97_codec
+gameport               20480  1 snd_ens1371
+snd_rawmidi            45056  1 snd_ens1371
+snd_seq_device         16384  1 snd_rawmidi
+snd_pcm               135168  2 snd_ac97_codec,snd_ens1371
+ghash_clmulni_intel    16384  0
+aesni_intel           368640  0
+snd_timer              49152  1 snd_pcm
+libaes                 16384  1 aesni_intel
+crypto_simd            16384  1 aesni_intel
+cryptd                 24576  2 crypto_simd,ghash_clmulni_intel
+glue_helper            16384  1 aesni_intel
+snd                   110592  10 snd_seq_device,snd_timer,snd_ac97_codec,snd_pcm,snd_rawmidi,snd_ens1371
+vmw_balloon            24576  0
+soundcore              16384  1 snd
+vmw_vmci               86016  2 vmw_balloon,vmw_vsock_vmci_transport
+sg                     36864  0
+joydev                 28672  0
+serio_raw              20480  0
+pcspkr                 16384  0
+ac                     16384  0
+evdev                  28672  7
+binfmt_misc            24576  1
+sunrpc                659456  1
+fuse                  167936  5
+configfs               57344  1
+ip_tables              32768  0
+x_tables               53248  1 ip_tables
+autofs4                53248  2
+ext4                  921600  1
+crc16                  16384  1 ext4
+mbcache                16384  1 ext4
+jbd2                  151552  1 ext4
+crc32c_generic         16384  0
+sd_mod                 61440  3
+t10_pi                 16384  1 sd_mod
+crc_t10dif             20480  1 t10_pi
+crct10dif_generic      16384  0
+hid_generic            16384  0
+usbhid                 65536  0
+hid                   147456  2 usbhid,hid_generic
+sr_mod                 28672  0
+cdrom                  73728  1 sr_mod
+ata_generic            16384  0
+crct10dif_pclmul       16384  1
+crct10dif_common       16384  3 crct10dif_generic,crc_t10dif,crct10dif_pclmul
+crc32_pclmul           16384  0
+crc32c_intel           24576  3
+vmwgfx                376832  3
+psmouse               184320  0
+ttm                   114688  1 vmwgfx
+drm_kms_helper        274432  1 vmwgfx
+cec                    61440  1 drm_kms_helper
+mptspi                 28672  2
+mptscsih               32768  1 mptspi
+mptbase                77824  2 mptspi,mptscsih
+ata_piix               36864  0
+drm                   618496  6 vmwgfx,drm_kms_helper,ttm
+i2c_piix4              28672  0
+ehci_pci               20480  0
+scsi_transport_spi     40960  1 mptspi
+uhci_hcd               53248  0
+ehci_hcd               98304  1 ehci_pci
+libata                290816  2 ata_piix,ata_generic
+usbcore               323584  4 ehci_pci,usbhid,ehci_hcd,uhci_hcd
+usb_common             16384  3 usbcore,ehci_hcd,uhci_hcd
+scsi_mod              262144  7 mptspi,sd_mod,scsi_transport_spi,mptscsih,libata,sg,sr_mod
+e1000                 155648  0
+button                 24576  0

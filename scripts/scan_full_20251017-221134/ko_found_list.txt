@@ -1,0 +1,2 @@
+/home/kali/dasak/brake_now_hidden/brokepkg-master/brokepkg.ko
+/home/kali/dasak/brake_now_hidden/brokepkg-master/brokepkg.ko

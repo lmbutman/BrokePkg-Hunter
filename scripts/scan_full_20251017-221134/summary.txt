@@ -1,0 +1,38 @@
+Excluding: /home/kali/dasak/BrokePkg-Hunter/scripts
+STEP 1: Simple hint checks
+[1.1] /sys/module/brokepkg: PRESENT
+[1.2] dmesg contains brokepkg (see scan_full_20251017-221134/dmesg_brokepkg.txt)
+[1.3] lsmod: brokepkg not listed
+STEP 3: Attempting brute-force unhide (signals 34..64 then 1..31) using disposable child
+Spawned disposable child PID=2276
+Module became VISIBLE after sending signal 31 to child
+Unhide brute-force finished. found_signal: 31
+rmmod succeeded
+STEP 5: Searching for brokepkg.ko across common roots
+Found brokepkg .ko files:
+    /home/kali/dasak/brake_now_hidden/brokepkg-master/brokepkg.ko
+    /home/kali/dasak/brake_now_hidden/brokepkg-master/brokepkg.ko
+Attempting global search for MAGIC_HIDE macro in config.h files (may be slow)
+No MAGIC_HIDE value discovered; skipping folder-name search
+STEP 7: Listing open ports and owning processes
+Open ports saved to scan_full_20251017-221134/open_ports.txt
+STEP 8: Startup / autostart checks
+/etc/ld.so.preload absent
+Startup checks completed (see scan_full_20251017-221134/* for raw outputs)
+STEP 9: Cron and at jobs
+ADDITIONAL: checking SUID files, SSH keys, iptables/nft, package-integrity hints
+STEP 10: Collating results
+timestamp: 20251017-221134
+verdict: on_disk_artifact_found_but_not_loaded
+evidence: dmesg_has_brokepkg on_disk_ko_found unhide_signal_found:31 removed_via_rmmod open_ports_listed
+repo: none
+found_kos:
+  /home/kali/dasak/brake_now_hidden/brokepkg-master/brokepkg.ko
+  /home/kali/dasak/brake_now_hidden/brokepkg-master/brokepkg.ko
+magic_hide: none
+magic_dirs:
+  none
+rmmod_result: removed_ok
+Scan complete. Human summary: scan_full_20251017-221134/summary.txt
+Full JSON report: scan_full_20251017-221134/report_20251017-221134.json
+Raw outputs in scan_full_20251017-221134 (do not commit these to git).

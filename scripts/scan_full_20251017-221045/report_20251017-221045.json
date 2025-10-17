@@ -1,0 +1,21 @@
+{
+  "timestamp": "20251017-221045",
+  "verdict": "on_disk_artifact_found_but_not_loaded",
+  "repo": "",
+  "evidence": [
+    "dmesg_has_brokepkg"
+,    "lsmod_listed"
+,    "on_disk_ko_found"
+,    "unhide_signal_found:34"
+,    "removed_via_rmmod"
+,    "open_ports_listed"
+  ],
+  "found_kos": [
+    "/home/kali/dasak/brake_now_hidden/brokepkg-master/brokepkg.ko"
+,    "/home/kali/dasak/brake_now_hidden/brokepkg-master/brokepkg.ko"
+  ],
+  "magic_hide": "",
+  "magic_dirs": [
+    ""
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "timestamp": "20251017-220830",
+  "verdict": "not_detected_by_this_scan",
+  "repo": "",
+  "evidence": [
+    "open_ports_listed"
+  ],
+  "found_kos": [
+    ""
+  ],
+  "magic_hide": "",
+  "magic_dirs": [
+    ""
+  ]
+}

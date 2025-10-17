@@ -1,0 +1,5 @@
+Excluding: /home/kali/dasak/BrokePkg-Hunter/scripts
+STEP 1: Simple hint checks
+[1.1] /sys/module/brokepkg: PRESENT
+[1.2] dmesg contains brokepkg (see scan_full_20251017-164219/dmesg_brokepkg.txt)
+[1.3] lsmod: brokepkg present

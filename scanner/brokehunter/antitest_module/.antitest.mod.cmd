@@ -1,0 +1,1 @@
+cmd_/home/kali/dasak/BrokePkg-Hunter/scanner/brokehunter/antitest_module/antitest.mod := { echo  /home/kali/dasak/BrokePkg-Hunter/scanner/brokehunter/antitest_module/antitest.o;  echo; } > /home/kali/dasak/BrokePkg-Hunter/scanner/brokehunter/antitest_module/antitest.mod

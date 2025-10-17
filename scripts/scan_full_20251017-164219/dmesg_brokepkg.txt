@@ -1,0 +1,9 @@
+[  121.717623] brokepkg: loading out-of-tree module taints kernel.
+[  121.834833] brokepkg now is runing
+[  438.456089] brokepkg unloaded, my work has completed
+[  866.250549] brokepkg now is runing
+[  878.157127] brokepkg: hidden module
+[ 1406.828512]  button(E) [last unloaded: brokepkg]
+[ 1417.272822]  button(E) [last unloaded: brokepkg]
+[ 1423.877855]  button(E) [last unloaded: brokepkg]
+[ 2907.942679] brokepkg: module revealed

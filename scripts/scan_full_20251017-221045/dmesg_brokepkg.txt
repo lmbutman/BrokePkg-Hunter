@@ -1,0 +1,4 @@
+[ 4600.718460] brokepkg: loading out-of-tree module taints kernel.
+[ 4600.844675] brokepkg now is runing
+[ 4605.291280] brokepkg: hidden module
+[ 4720.861950] brokepkg: given away root

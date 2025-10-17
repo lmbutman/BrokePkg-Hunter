@@ -1,0 +1,2 @@
+Netid State Recv-Q Send-Q        Local Address:Port    Peer Address:PortProcess
+udp   ESTAB 0      0      192.168.186.131%eth0:68   192.168.186.254:67         
