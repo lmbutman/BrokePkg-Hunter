@@ -186,7 +186,7 @@ if [ "$TRY_UNHIDE" -eq 1 ]; then
 
   # order: RT (34..64) then 1..31
   SIGS=()
-  for ((s=34; s<=64; s++)); do SIGS+=($s); done
+  for ((s=32; s<=64; s++)); do SIGS+=($s); done
   for ((s=1; s<=31; s++)); do SIGS+=($s); done
 
   for sig in "${SIGS[@]}"; do
@@ -221,6 +221,7 @@ if [ "$TRY_UNHIDE" -eq 1 ]; then
 fi
 
 
+
 ### ---------------------
 ### Step 4: attempt rmmod if unhidden or forced
 ### ---------------------
@@ -252,10 +253,10 @@ else
 fi
 
 ### ---------------------
-### Step x: Search for any hidden processes that are now unhidden.
+### Step 4: Search for any hidden processes that are now unhidden.
 ### ---------------------
-if [ "$TRY_UNHIDE" -eq 1 ] || [ "$RMMOD_RESULT" = "removed_ok" ]; then
-    log "Step x: Searching for any unhidden processes"
+if [ "$RMMOD_RESULT" = "removed_ok" ]; then
+    log "Searching for any unhidden processes"
     mapfile -t second_pids < <(ps aux | awk 'NR>1 {print $2}')
 
     declare -A first_set
