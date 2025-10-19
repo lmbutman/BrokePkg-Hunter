@@ -220,6 +220,7 @@ if [ "$TRY_UNHIDE" -eq 1 ]; then
   echo "$FOUND_UNHIDE_SIGNAL" > "$OUTDIR/found_unhide_signal.txt" 2>/dev/null || true
 fi
 
+
 ### ---------------------
 ### Step 4: attempt rmmod if unhidden or forced
 ### ---------------------
@@ -234,6 +235,8 @@ if is_visible || [ -n "$FOUND_UNHIDE_SIGNAL" ] || [ "$FORCE_RMMOD" -eq 1 ]; then
   fi
 
   if [ "$WANT_RMMOD" = "Y" ]; then
+    # Create snapshot of current processes and try to remove brokepkg module
+    mapfile -t first_pids < <(ps aux | awk 'NR>1 {print $2}')
     if sudo rmmod brokepkg 2> "$OUTDIR/rmmod_err.txt"; then
       RMMOD_RESULT="removed_ok"
       log "rmmod succeeded"
@@ -246,6 +249,33 @@ if is_visible || [ -n "$FOUND_UNHIDE_SIGNAL" ] || [ "$FORCE_RMMOD" -eq 1 ]; then
   fi
 else
   log "Skipping rmmod - module not visible and not forced"
+fi
+
+### ---------------------
+### Step x: Search for any hidden processes that are now unhidden.
+### ---------------------
+if [ "$TRY_UNHIDE" -eq 1 ] || [ "$RMMOD_RESULT" = "removed_ok" ]; then
+    log "Step x: Searching for any unhidden processes"
+    mapfile -t second_pids < <(ps aux | awk 'NR>1 {print $2}')
+
+    declare -A first_set
+    for pid in "${first_pids[@]}"; do
+        first_set[$pid]=1
+    done
+
+    new_pids=()
+    for pid in "${second_pids[@]}"; do
+        if [[ ! -v first_set[$pid] ]]; then
+	    new_pids+=("$pid")
+	    echo " Found unhidden processes with PID: $pid"
+	    ps aux | awk -v p="$pid" '$2 == p' >> "$OUTDIR/hidden_processes.txt"
+        fi
+    done
+    if [ "${#new_pids[@]}" -eq 0 ]; then
+	echo "No hidden processes found"
+    else
+	log "Saved still running unhidden processes to $OUTDIR/hidden_processes.txt"
+    fi
 fi
 
 ### ---------------------
@@ -276,8 +306,8 @@ if [ "${#FOUND_KO_LIST[@]}" -gt 0 ]; then
   for ko in "${FOUND_KO_LIST[@]}"; do
     basedir="$(dirname "$ko")"
     # look for include/config.h near the module source layout
-    if [ -f "$basedir/include/config.h" ]; then
-      val=$(grep -E '^[[:space:]]*#define[[:space:]]+MAGIC_HIDE[[:space:]]+[0-9A-Za-z_/-]+' "$basedir/include/config.h" 2>/dev/null | awk '{print $3}' | tr -d '"' | head -n1 || true)
+    if [ -f "/$basedir/include/config.h" ]; then
+      val=$(grep -E '^[[:space:]]*#define[[:space:]]+MAGIC_HIDE[[:space:]]+["0-9A-Za-z_/-]+' "/$basedir/include/config.h" 2>/dev/null | awk '{print $3}' | tr -d '"' | head -n1 || true)
       if [ -n "$val" ]; then
         MAGIC_HIDE="$val"
         log "MAGIC_HIDE found in $basedir/include/config.h : $MAGIC_HIDE"
@@ -291,7 +321,7 @@ fi
 if [ -z "$MAGIC_HIDE" ]; then
   log "Attempting global search for MAGIC_HIDE macro in config.h files (may be slow)"
   while IFS= read -r f; do
-    val=$(grep -E '^[[:space:]]*#define[[:space:]]+MAGIC_HIDE[[:space:]]+[0-9A-Za-z_/-]+' "$f" 2>/dev/null | awk '{print $3}' | tr -d '"' | head -n1 || true)
+    val=$(grep -E '^[[:space:]]*#define[[:space:]]+MAGIC_HIDE[[:space:]]+["0-9A-Za-z_/-]+' "$f" 2>/dev/null | awk '{print $3}' | tr -d '"' | head -n1 || true)
     if [ -n "$val" ]; then MAGIC_HIDE="$val"; log "MAGIC_HIDE discovered in $f : $MAGIC_HIDE"; break; fi
   done < <(find_excluding / "config.h")
 fi
@@ -303,7 +333,7 @@ MAGIC_DIRS=()
 if [ -n "$MAGIC_HIDE" ]; then
   log "STEP 6: Searching for directories named $MAGIC_HIDE"
   # find top-level matches
-  while IFS= read -r p; do MAGIC_DIRS+=( "$p" ); done < <(find / -type d -name "$MAGIC_HIDE" 2>/dev/null || true)
+  while IFS= read -r p; do MAGIC_DIRS+=( "$p" ); done < <(find / -name "*${MAGIC_HIDE}*" 2>/dev/null || true)
   if [ "${#MAGIC_DIRS[@]}" -gt 0 ]; then
     log "Found directories named $MAGIC_HIDE:"
     printf "%s\n" "${MAGIC_DIRS[@]}" | sed 's/^/  /' | tee -a "$SUMMARY"
@@ -426,6 +456,8 @@ fi
   echo "magic_dirs:"
   printf "%s\n" "${MAGIC_DIRS[@]:-none}" | sed 's/^/  /'
   echo "rmmod_result: $RMMOD_RESULT"
+  echo "unhidden_processes:"
+  printf "%s\n" "${new_pids[@]:-none}" | sed 's/^/ /'
 } | tee -a "$SUMMARY"
 
 # write JSON report (minimal, safe)
