@@ -1,4 +1,4 @@
-# BrokePkg-Hunter
+# BrokePkg-Hunter - Submission
 
 ## 1. Problem statement
 This project provides a robust, portable Bash scanner that detects and helps remediate traces of the real-world kernel rootkit **brokepkg**. The tool performs layered checks (memory, filesystem, logs and persistence mechanisms), optionally attempts to “unhide” modules by sending signals to a disposable process, and can attempt controlled removal (`rmmod`) when allowed. The scanner produces a timestamped directory with raw evidence and a machine-readable JSON report so investigators can triage, reproduce and archive findings.
